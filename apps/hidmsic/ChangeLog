@@ -1,2 +1,4 @@
 0.01: Core functionnality
 0.02: Added BLE HID option for Joystick and bare Keyboard
+0.03: Added swipe support for next and previous song
+0.04: Add Playpause touch support and change color scheme
