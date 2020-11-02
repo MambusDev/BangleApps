@@ -7,7 +7,7 @@ let settings = Storage.readJSON(filename,1) || {
   debug: false
 };
 
-if(!settings.highres) Bangle.setLCDMode("80x80");
+if(!settings.highres) Bangle.setLCDMode("120x120");
 else Bangle.setLCDMode();
 
 g.clear();
