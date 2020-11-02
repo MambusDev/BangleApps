@@ -1,4 +1,6 @@
+// Load fonts
 require("Font8x12").add(Graphics);
+require("Font7x11Numeric7Seg").add(Graphics);
 let HRMstate = false;
 let currentHRM = "CALC";
 
@@ -12,7 +14,7 @@ function drawTimeDate() {
   }
   
   if (m < 10) {
-    m = "0" + h;
+    m = "0" + m;
   }
 
   var daysOfWeek = ["SUN", "MON", "TUE","WED","THU","FRI","SAT"];
@@ -22,13 +24,20 @@ function drawTimeDate() {
 
   // Reset the state of the graphics library
   g.reset();
+
+  // draw the current time (4x size 7 segment)
+  g.setFont("7x11Numeric7Seg",7);
+  g.setFontAlign(-1,0); // align right bottom
+  
+  // Set color
+  g.setColor('#202020');
+  g.drawString(88, 25, 75, true /*not clear background*/);
+  g.drawString(88, 25, 165, true /*not clear background*/);
+  
   // Set color
   g.setColor('#2ecc71');
-  // draw the current time (4x size 7 segment)
-  g.setFont("8x12",8);
-  g.setFontAlign(-1,0); // align right bottom
-  g.drawString(hours, 25, 75, true /*clear background*/);
-  g.drawString(mins, 25, 165, true /*clear background*/);
+  g.drawString(hours, 25, 75, false /*not clear background*/);
+  g.drawString(mins, 25, 165, false /*not clear background*/);
 
   // draw the date (2x size 7 segment)
   g.setFont("6x8",2);
@@ -38,6 +47,58 @@ function drawTimeDate() {
 
 
 //We will create custom "Widgets" for our face.
+var g_steps = 0;
+
+const storage = require("Storage");
+
+// Data is stored to this file by active pedometer
+function getImportFileName() {
+  now = new Date();
+  // Add leading zero to month
+  month = now.getMonth() + 1;
+  if (month < 10) month = "0" + month;
+  filename = "activepedom" + now.getFullYear() + month + now.getDate() + ".data";
+  return filename;
+}
+
+var history = 86400000; // 28800000=8h 43200000=12h //86400000=24h
+
+function getStepsFromCSV(file) {
+  i = 0;
+  column = 1; // column that holds steps
+  array = [];
+  now = new Date();
+  while ((nextLine = file.readLine())) { //as long as there is a next line
+    if(nextLine) {
+      dataSplitted = nextLine.split(','); //split line, 
+      diff = now - dataSplitted[0]; //calculate difference between now and stored time
+      if (diff <= history) { //only entries from the last x ms
+        array.push(dataSplitted[column]);
+      }
+    }
+    i++;
+  }
+
+  // Return 0 if file was empty / missing
+  if (array.length > 0) {
+    return array[array.length-1];
+  }
+
+  return null;
+}
+
+function importSteps() {
+    filename = getImportFileName();
+    csv_file = storage.open(filename, "r");
+    csv_steps = getStepsFromCSV(csv_file);
+
+    if(csv_steps != null) {
+      g_steps = csv_steps;
+    } else {
+      g_steps = 0;
+    }
+}
+
 
 function drawSteps() {
   //Reset to defaults.
@@ -48,7 +109,7 @@ function drawSteps() {
   g.setFontAlign(-1,0); // align right bottom
   g.drawString("STEPS", 145, 40, true /*clear background*/);
   g.setColor('#bdc3c7');
-  g.drawString("-", 145, 65, true /*clear background*/);
+  g.drawString(g_steps.toString(), 145, 65, true /*clear background*/);
 }
 
 function drawBPM(on) {
@@ -93,10 +154,15 @@ g.clear();
 
 // Load and draw widgets
 Bangle.loadWidgets();
+
+// Remove own widget
+delete WIDGETS['verticalface'];
+
 Bangle.drawWidgets();
 
 // draw immediately at first
 drawTimeDate();
+importSteps();
 drawSteps();
 drawBPM();
 drawBattery();
@@ -115,6 +181,8 @@ Bangle.on('lcdPower',on=>{
     drawBPM(HRMstate);
     drawTimeDate();
     drawBattery();
+    importSteps();
+    drawSteps();
   } else {
     //Screen off
     clearInterval(secondInterval);
@@ -123,12 +191,6 @@ Bangle.on('lcdPower',on=>{
 
 // Show launcher when middle button pressed
 setWatch(Bangle.showLauncher, BTN2, { repeat: false, edge: "falling" });
-
-Bangle.on('touch', function(button) {
-  if(button == 1 || button == 2){
-    Bangle.showLauncher();
-  }
-});
 
 //HRM Controller.
 setWatch(function(){
@@ -158,8 +220,3 @@ Bangle.on('HRM', function(hrm) {
     drawBPM(HRMstate);
   }
 });
-
-
-//Bangle.on('step', function(up) {
-//  console.log("Step");
-//});
