@@ -68,6 +68,8 @@
       'stepSensitivity' : 80,
       'stepGoal' : 10000,
       'stepLength' : 75,
+      'showWidget' : false,
+      'widgetArea' : "tl",
     };
     if (!settings) { loadSettings(); }
     return (key in settings) ? settings[key] : DEFAULTS[key];
@@ -138,6 +140,10 @@
   }
 
   function draw() {
+    // Draw only, if user wants the widget to be drawn
+    if (setting('showWidget') == false) {
+      return;
+    }
     var height = 23; //width is deined globally
     distance = (stepsCounted * setting('stepLength')) / 100 /1000; //distance in km
     
@@ -228,5 +234,5 @@
   setStepSensitivity(setting('stepSensitivity')); //set step sensitivity (80 is standard, 400 is muss less sensitive)
   timerStoreData = setInterval(storeData, storeDataInterval); //store data regularly
   //Add widget
-  WIDGETS["activepedom"]={area:"tl",width:width,draw:draw};
+  WIDGETS["activepedom"]={area:setting('widgetArea'),width:width,draw:draw};
 })();

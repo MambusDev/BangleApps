@@ -5,6 +5,7 @@
 (function(back) {
   const SETTINGS_FILE = 'activepedom.settings.json';
   const LINES = ['Steps', 'Distance'];
+  const AREAS = ['tl', 'tr', 'bl', 'br'];
 
   // initialize with default settings...
   let s = {
@@ -17,6 +18,8 @@
     'stepLength' : 75,
     'lineOne': LINES[0],
     'lineTwo': LINES[1],
+    'showWidget': false,
+    'widgetArea': "tl",
   };
   // ...and overwrite them with any saved values
   // This way saved values are preserved if a new version adds more settings
@@ -87,24 +90,39 @@
       step: 1,
       onchange: save('stepLength'),
     },
+    'Show widget': {
+      value: s.showWidget,
+      format : v => v?"On":"Off",
+      onchange: save('showWidget'),
+    },
+    'Widget area': {
+      format: () => s.widgetArea,
+      onchange:  function () {
+        // cycles through options
+        const oldIndex = AREAS.indexOf(s.widgetArea);
+        const newIndex = (oldIndex + 1) % AREAS.length;
+        s.widgetArea = AREAS[newIndex];
+        save('widgetArea')(s.widgetArea);
+      },
+    },
     'Line One': {
       format: () => s.lineOne,
       onchange: function () {
         // cycles through options
-        const oldIndex = LINES.indexOf(s.lineOne)
-        const newIndex = (oldIndex + 1) % LINES.length
-        s.lineOne = LINES[newIndex]
-        save('lineOne')(s.lineOne)
+        const oldIndex = LINES.indexOf(s.lineOne);
+        const newIndex = (oldIndex + 1) % LINES.length;
+        s.lineOne = LINES[newIndex];
+        save('lineOne')(s.lineOne);
       },
     },
     'Line Two': {
       format: () => s.lineTwo,
       onchange: function () {
         // cycles through options
-        const oldIndex = LINES.indexOf(s.lineTwo)
-        const newIndex = (oldIndex + 1) % LINES.length
-        s.lineTwo = LINES[newIndex]
-        save('lineTwo')(s.lineTwo)
+        const oldIndex = LINES.indexOf(s.lineTwo);
+        const newIndex = (oldIndex + 1) % LINES.length;
+        s.lineTwo = LINES[newIndex];
+        save('lineTwo')(s.lineTwo);
       },
     },
   };
