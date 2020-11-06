@@ -1,7 +1,15 @@
 (() => {
+  const s = require('Storage');
+  const SETTINGS_FILE = 'verticalface.settings.json';
+  let settings;
   require("Font7x11Numeric7Seg").add(Graphics);
 
   function draw() {
+    // Draw only, if user wants the widget to be drawn
+    if (setting('showWidget') == false) {
+      return;
+    }
+
     var d = new Date();
     var h = d.getHours(), m = d.getMinutes();
 
@@ -25,9 +33,25 @@
     g.drawString(hours + ":" + mins, this.x + 5, this.y);
   }
 
+  //load settings
+  function loadSettings() {
+    settings = s.readJSON(SETTINGS_FILE, 1) || {};
+  }
+
+  //return setting
+  function setting(key) {
+    //define default settings
+    const DEFAULTS = {
+      'showWidget' : false,
+      'widgetArea' : "tl",
+    };
+    if (!settings) { loadSettings(); }
+    return (key in settings) ? settings[key] : DEFAULTS[key];
+  }
+
   // add your widget
   WIDGETS["verticalface"]={
-    area:"tl", // tl (top left), tr (top right), bl (bottom left), br (bottom right)
+    area:setting('widgetArea'),
     width: 75, // how wide is the widget? You can change this and call Bangle.drawWidgets() to re-layout
     draw:draw // called to draw the widget
   };
