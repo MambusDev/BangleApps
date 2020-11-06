@@ -145,6 +145,8 @@ function drawBattery() {
   g.setFontAlign(-1,0); // align right bottom
   g.drawString("CHARGE", 145, 170, true /*clear background*/);
   g.setColor('#bdc3c7');
+  // This clears complete battery charge field:
+  g.drawString("    ", 145, 195, true /*clear background*/);
   g.drawString(`${charge}%`, 145, 195, true /*clear background*/);
 }
 

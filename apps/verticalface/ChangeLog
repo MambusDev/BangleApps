@@ -4,3 +4,4 @@
 0.07: Added leading zero to hours and minutes
 0.08: Added step counting and widget
 0.09: Added view settings of widget
+0.010: Fix percentage bug
