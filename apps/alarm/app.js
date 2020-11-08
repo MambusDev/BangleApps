@@ -44,6 +44,7 @@ function editAlarm(alarmIndex) {
   var hrs = 12;
   var mins = 0;
   var en = true;
+  var s = false;
   var repeat = true;
   var as = false;
   if (!newAlarm) {
@@ -69,6 +70,11 @@ function editAlarm(alarmIndex) {
       format: v=>v?"On":"Off",
       onchange: v=>en=v
     },
+    'Sound': {
+      value: s,
+      format: v=>v?"On":"Off",
+      onchange: v=>s=v
+    },
     'Repeat': {
       value: en,
       format: v=>v?"Yes":"No",
@@ -89,7 +95,7 @@ function editAlarm(alarmIndex) {
     // Save alarm
     return {
       on : en, hr : hr,
-      last : day, rp : repeat, as: as
+      last : day, s : s, rp : repeat, as: as
     };
   }
   menu["> Save"] = function() {

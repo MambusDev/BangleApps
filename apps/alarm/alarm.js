@@ -2,6 +2,12 @@
 // 'load(alarm.js)' - so let's remove it first!
 clearInterval();
 
+const BUZZ_COUNT = 20;
+const BUZZ_LENGTH_MS = 250;
+const BUZZ_PAUSE_MS = 1000;
+const BEEP_FREQ_HZ = 4000;
+const SNOOZE_TIMER_MS = 300000;  // 5 mins
+
 function formatTime(t) {
   var hrs = 0|t;
   var mins = Math.round((t-hrs)*60);
@@ -15,7 +21,7 @@ function getCurrentHr() {
 
 function showAlarm(alarm) {
   var msg = formatTime(alarm.hr);
-  var buzzCount = 10;
+  var buzzCount = BUZZ_COUNT;
   if (alarm.msg)
     msg += "\n"+alarm.msg;
   E.showPrompt(msg,{
@@ -38,14 +44,16 @@ function showAlarm(alarm) {
     load();
   });
   function buzz() {
-    Bangle.buzz(100).then(()=>{
+    if (alarm.s) Bangle.beep(BUZZ_LENGTH_MS, BEEP_FREQ_HZ);
+    Bangle.buzz(BUZZ_LENGTH_MS).then(()=>{
       setTimeout(()=>{
-        Bangle.buzz(100).then(function() {
+        if (alarm.s) Bangle.beep(BUZZ_LENGTH_MS, BEEP_FREQ_HZ);
+        Bangle.buzz(BUZZ_LENGTH_MS).then(function() {
           if (buzzCount--)
-            setTimeout(buzz, 3000);
+            setTimeout(buzz, BUZZ_PAUSE_MS);
           else if(alarm.as) { // auto-snooze
-            buzzCount = 10;
-            setTimeout(buzz, 600000);
+            buzzCount = BUZZ_COUNT;
+            setTimeout(buzz, SNOOZE_TIMER_MS);
           }
         });
       },100);
