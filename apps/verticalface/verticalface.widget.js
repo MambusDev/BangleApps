@@ -1,14 +1,18 @@
 (() => {
   const s = require('Storage');
   const SETTINGS_FILE = 'verticalface.settings.json';
+  const WIDGET_WIDTH = 75;
   let settings;
   require("Font7x11Numeric7Seg").add(Graphics);
 
   function draw() {
     // Draw only, if user wants the widget to be drawn
     if (setting('showWidget') == false) {
+      this.width=0;
       return;
     }
+
+    this.width = WIDGET_WIDTH;
 
     var d = new Date();
     var h = d.getHours(), m = d.getMinutes();
@@ -52,7 +56,7 @@
   // add your widget
   WIDGETS["verticalface"]={
     area:setting('widgetArea'),
-    width: 75, // how wide is the widget? You can change this and call Bangle.drawWidgets() to re-layout
+    width: WIDGET_WIDTH, // how wide is the widget? You can change this and call Bangle.drawWidgets() to re-layout
     draw:draw // called to draw the widget
   };
 })()

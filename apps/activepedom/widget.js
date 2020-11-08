@@ -142,8 +142,12 @@
   function draw() {
     // Draw only, if user wants the widget to be drawn
     if (setting('showWidget') == false) {
+      this.width=0;
       return;
     }
+
+    this.width=width;
+
     var height = 23; //width is deined globally
     distance = (stepsCounted * setting('stepLength')) / 100 /1000; //distance in km
     
