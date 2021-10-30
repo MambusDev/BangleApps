@@ -2322,12 +2322,12 @@
     ]
   },
   {
-	"id": "nice-compass",
+	"id": "nice_compass",
 	"name": "Nice Compass",
 	"icon": "compass.png",
 	"version": "0.01",
 	"description": "An even nicer compass",
-	"tags": "tool",
+	"tags": "tools",
 	"type": "app",
 	"storage": [
 	  {"name": "nice-compass.js", "url": "nice-compass.js"},
