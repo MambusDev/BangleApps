@@ -2327,7 +2327,7 @@
 	"icon": "compass.png",
 	"version": "0.01",
 	"description": "An even nicer compass",
-	"tags": "tools",
+	"tags": "tool",
 	"type": "app",
 	"storage": [
 	  {"name": "nice-compass.js", "url": "nice-compass.js"},
