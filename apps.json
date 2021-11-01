@@ -366,8 +366,8 @@
   "description": "Show the current speed according to the GPS",
   "tags": "tool,outdoors,gps",
   "storage": [
-      {"name":"speedo.app.js","url":"speedo.js"},
-      {"name":"speedo.img","url":"speedo-icon.js","evaluate":true}
+      {"name":"speedotwo.app.js","url":"speedotwo.js"},
+      {"name":"speedotwo.img","url":"speedotwo-icon.js","evaluate":true}
     ]
   },
   { "id": "gpsrec",
