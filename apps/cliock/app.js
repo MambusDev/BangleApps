@@ -1,8 +1,11 @@
-var fontsize = 3;
+var fontsize = 2;
 var locale = require("locale");
 var marginTop = 40;
 var flag = false;
 var WeekDays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+var Commands = ["","set time","gps enable","gps disable","change tz"];
+var currentCommand = Commands[0];
 
 function drawAll(){
   updateTime();
@@ -14,6 +17,14 @@ function updateRest(now){
   writeLine(WeekDays[now.getDay()],1);
   writeLine(date,2);
 }
+
+function getWeekNumber(d) {
+  let now = d;
+  let onejan = new Date(now.getFullYear(), 0, 1);
+  let week = Math.ceil((((now.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
+  return week;
+}
+
 function updateTime(){
   if (!Bangle.isLCDOn()) return;
   let now = new Date();
@@ -22,7 +33,8 @@ function updateTime(){
   h = h>=10?h:"0"+h;
   m = m>=10?m:"0"+m;
   writeLine(h+":"+m,0);
-  writeLine(flag?" ":"_",3);
+  writeLine("CW"+getWeekNumber(now).toString(),3);
+  writeLine(currentCommand+(flag?" ":"|"),4);
   flag = !flag;
   if(now.getMinutes() == 0)
     updateRest(now);
@@ -34,18 +46,67 @@ function writeLine(str,line){
   g.setFont("6x8",fontsize);
   g.setColor(0,1,0);
   g.setFontAlign(-1,-1);
-  g.clearRect(0,marginTop+line*30,((str.length+1)*20),marginTop+25+line*30);
+  g.clearRect(0,marginTop+line*30,((g.getWidth() / fontsize / 6)*20),marginTop+25+line*30);
   writeLineStart(line);
   g.drawString(str,25,marginTop+line*30);
-} 
+}
+
+function searchStringInArray (str, strArray) {
+    for (var j=0; j<strArray.length; j++) {
+        if (strArray[j].match(str)) return j;
+    }
+    return -1;
+}
+
+function nextCommand(){
+  let max = Commands.length - 1;
+  let index = searchStringInArray(currentCommand, Commands);
+  
+  // Default state:
+  currentCommand = Commands[0];
+  
+  if (index != -1) {
+    if (index == max) {
+      currentCommand = Commands[0];
+    } else {
+      currentCommand = Commands[index + 1];
+    }
+  }
+}
+
+function previousCommand(){
+  let max = Commands.length - 1;
+  let index = searchStringInArray(currentCommand, Commands);
+  
+  // Default state:
+  currentCommand = Commands[0];
+  
+  if (index != -1) {
+    if (index == 0) {
+      currentCommand = Commands[max];
+    } else {
+      currentCommand = Commands[index - 1];
+    }
+  }
+}
+
+function enter() {
+  if (currentCommand == "") {
+    Bangle.showLauncher();
+  } else {
+    // run command
+  }
+}
 
 g.clear();
-Bangle.loadWidgets();
+Bangle.loadWidgets();  
 Bangle.drawWidgets();
 drawAll();
 Bangle.on('lcdPower',function(on) {
   if (on)
     drawAll();
 });
-var click = setInterval(updateTime, 1000);
-setWatch(Bangle.showLauncher, BTN2, {repeat:false,edge:"falling"});
+var click = setInterval(updateTime, 500);
+setWatch(enter, BTN2, {repeat:true,edge:"falling"});
+setWatch(previousCommand, BTN1, {repeat:true,edge:"falling"});
+setWatch(nextCommand, BTN3, {repeat:true,edge:"falling"});
