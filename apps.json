@@ -361,13 +361,13 @@
   },
   { "id": "fancyapp",
   "name": "Fancy App",
-  "icon": "speedotwo.png",
+  "icon": "fncyapp.png",
   "version":"0.04",
   "description": "Show the current speed according to the GPS",
   "tags": "tool,outdoors,gps",
   "storage": [
-      {"name":"speedotwo.app.js","url":"speedotwo.js"},
-      {"name":"speedotwo.img","url":"speedotwo-icon.js","evaluate":true}
+      {"name":"fncyapp.app.js","url":"fncyapp.js"},
+      {"name":"fncyapp.img","url":"fncyapp-icon.js","evaluate":true}
     ]
   },
   { "id": "gpsrec",
