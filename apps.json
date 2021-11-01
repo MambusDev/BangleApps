@@ -359,8 +359,8 @@
       {"name":"speedo.img","url":"speedo-icon.js","evaluate":true}
     ]
   },
-  { "id": "speedotwo",
-  "name": "Speedotwo",
+  { "id": "fancyapp",
+  "name": "Fancy App",
   "icon": "speedotwo.png",
   "version":"0.04",
   "description": "Show the current speed according to the GPS",
