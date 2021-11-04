@@ -102,8 +102,10 @@ function printLine(str, color) {
 var animationInterval = setInterval(cursorAnimation, 500);
 
 // Test
+/*
 clear();
 setFontSize(2);
 printLine("10:57", textColor.green);
 printLine("Nov 05, 2021", textColor.green);
 printLine("CW44", textColor.green);
+*/
