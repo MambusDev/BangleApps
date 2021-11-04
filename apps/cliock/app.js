@@ -1,11 +1,10 @@
-var fontsize = 2;
 var locale = require("locale");
-var marginTop = 40;
-var flag = false;
 var WeekDays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
 var Commands = ["","set time","gps enable","gps disable","change tz"];
 var currentCommand = Commands[0];
+
+var cli = require("clistyle");
 
 function drawAll(){
   updateTime();
@@ -14,8 +13,8 @@ function drawAll(){
 
 function updateRest(now){
   let date = locale.date(now,false);
-  writeLine(WeekDays[now.getDay()],1);
-  writeLine(date,2);
+  cli.printLine(WeekDays[now.getDay()], cli.textColor.green);
+  cli.printLine(date, cli.textColor.green);
 }
 
 function getWeekNumber(d) {
@@ -32,23 +31,11 @@ function updateTime(){
   let m = now.getMinutes();
   h = h>=10?h:"0"+h;
   m = m>=10?m:"0"+m;
-  writeLine(h+":"+m,0);
-  writeLine("CW"+getWeekNumber(now).toString(),3);
-  writeLine(currentCommand+(flag?" ":"|"),4);
-  flag = !flag;
+  cli.printLine(h+":"+m,cli.textColor.green);
+  cli.printLine("CW"+getWeekNumber(now).toString(),cli.textColor.green);
+  cli.printLine(currentCommand, cli.textColor.green);
   if(now.getMinutes() == 0)
     updateRest(now);
-}
-function writeLineStart(line){
-  g.drawString(">",4,marginTop+line*30);
-}
-function writeLine(str,line){
-  g.setFont("6x8",fontsize);
-  g.setColor(0,1,0);
-  g.setFontAlign(-1,-1);
-  g.clearRect(0,marginTop+line*30,((g.getWidth() / fontsize / 6)*20),marginTop+25+line*30);
-  writeLineStart(line);
-  g.drawString(str,25,marginTop+line*30);
 }
 
 function searchStringInArray (str, strArray) {
@@ -106,7 +93,7 @@ Bangle.on('lcdPower',function(on) {
   if (on)
     drawAll();
 });
-var click = setInterval(updateTime, 500);
+
 setWatch(enter, BTN2, {repeat:true,edge:"falling"});
 setWatch(previousCommand, BTN1, {repeat:true,edge:"falling"});
 setWatch(nextCommand, BTN3, {repeat:true,edge:"falling"});

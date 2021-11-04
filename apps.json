@@ -89,6 +89,18 @@
       {"name":"notify","url":"notify.js"}
     ]
   },
+  { "id": "clistyle",
+    "name": "Command Line Interface style library",
+    "shortName":"CLI Style",
+    "icon": "clistyle.png",
+    "version":"0.01",
+    "description": "Library for cli styled apps",
+    "tags": "widget",
+    "type": "clistyle",
+    "storage": [
+      {"name":"clistyle","url":"clistyle.js"}
+    ]
+  },
   { "id": "notifyfs",
     "name": "Fullscreen Notifications",
     "shortName":"Notifications",
