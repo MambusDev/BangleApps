@@ -96,7 +96,7 @@
     "version":"0.01",
     "description": "Library for cli styled apps",
     "tags": "widget",
-    "type": "clistyle",
+    "type": "widget",
     "storage": [
       {"name":"clistyle","url":"clistyle.js"}
     ]
@@ -1164,6 +1164,7 @@
     "description": "Simple CLI-Styled Clock",
     "tags": "clock,cli,command,bash,shell",
     "type":"clock",
+    "dependencies" : { "clistyle":"widget" },
     "allow_emulator":true,
     "storage": [
       {"name":"cliock.app.js","url":"app.js"},
