@@ -1,20 +1,27 @@
-var locale = require("locale");
 var WeekDays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
 var Commands = ["","set time","gps enable","gps disable","change tz"];
 var currentCommand = Commands[0];
 
+var locale = require("locale");
 var cli = require("clistyle");
+cli.setFontSize(3);
 
 function drawAll(){
   updateTime();
-  updateRest(new Date());
+  updateDate(new Date());
+  updateCmd(currentCommand);
 }
 
-function updateRest(now){
+function updateCmd(cmd){
+  cli.printLine(cmd, cli.textColor.green, 4, true);
+}
+
+function updateDate(now){
   let date = locale.date(now,false);
-  cli.printLine(WeekDays[now.getDay()], cli.textColor.green);
-  cli.printLine(date, cli.textColor.green);
+  cli.printLine(WeekDays[now.getDay()], cli.textColor.green, 1, false);
+  cli.printLine(date, cli.textColor.green, 2, false);
+  cli.printLine("CW"+getWeekNumber(now).toString(),cli.textColor.green, 3, false);
 }
 
 function getWeekNumber(d) {
@@ -31,11 +38,9 @@ function updateTime(){
   let m = now.getMinutes();
   h = h>=10?h:"0"+h;
   m = m>=10?m:"0"+m;
-  cli.printLine(h+":"+m,cli.textColor.green);
-  cli.printLine("CW"+getWeekNumber(now).toString(),cli.textColor.green);
-  cli.printLine(currentCommand, cli.textColor.green);
+  cli.printLine(h+":"+m,cli.textColor.green, 0, false);
   if(now.getMinutes() == 0)
-    updateRest(now);
+    updateDate(now);
 }
 
 function searchStringInArray (str, strArray) {
@@ -59,6 +64,7 @@ function nextCommand(){
       currentCommand = Commands[index + 1];
     }
   }
+  updateCmd(currentCommand);
 }
 
 function previousCommand(){
@@ -75,6 +81,7 @@ function previousCommand(){
       currentCommand = Commands[index - 1];
     }
   }
+  updateCmd(currentCommand);
 }
 
 function enter() {
