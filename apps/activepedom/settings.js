@@ -4,8 +4,8 @@
  */
 (function(back) {
   const SETTINGS_FILE = 'activepedom.settings.json';
-  const LINES = ['Steps', 'Distance'];
   const AREAS = ['tl', 'tr', 'bl', 'br'];
+  const LINES = ['Steps', 'Distance', 'Hide'];
 
   // initialize with default settings...
   let s = {

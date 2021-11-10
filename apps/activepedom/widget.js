@@ -70,6 +70,8 @@
       'stepLength' : 75,
       'showWidget' : false,
       'widgetArea' : "tl",
+      'lineOne' : "Distance",
+      'lineTwo' : "Steps",
     };
     if (!settings) { loadSettings(); }
     return (key in settings) ? settings[key] : DEFAULTS[key];
@@ -149,6 +151,7 @@
     this.width=width;
 
     var height = 23; //width is deined globally
+    
     distance = (stepsCounted * setting('stepLength')) / 100 /1000; //distance in km
     
     //Check if same day
@@ -162,6 +165,12 @@
       stepsOutsideTime = 0;
     }
     lastUpdate = date;
+
+    // not everyone likes a widget, having refreshed lastUpdate we can exit
+    if (setting('lineOne') == 'Hide' && setting('lineTwo') == 'Hide') {
+      settings = 0; //reset settings to save memory
+      return;
+    }
     
     g.reset();
     g.clearRect(this.x, this.y, this.x+width, this.y+height);
@@ -170,7 +179,6 @@
     if (active == 1) g.setColor(0x07E0); //green
     else g.setColor(0xFFFF); //white
     g.setFont("6x8", 2);
-
     if (setting('lineOne') == 'Steps') {
       g.drawString(kFormatterSteps(stepsCounted),this.x+1,this.y);  //first line, big number, steps
     }
@@ -237,6 +245,7 @@
 
   setStepSensitivity(setting('stepSensitivity')); //set step sensitivity (80 is standard, 400 is muss less sensitive)
   timerStoreData = setInterval(storeData, storeDataInterval); //store data regularly
+
   //Add widget
-  WIDGETS["activepedom"]={area:setting('widgetArea'),width:width,draw:draw};
+  WIDGETS["activepedom"]={area:setting('widgetArea'),width:width,draw:draw, getSteps:()=>stepsCounted};
 })();
