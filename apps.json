@@ -193,13 +193,15 @@
       {"name":"notify","url":"notify.js"}
     ]
   },
-  { "id": "clistyle",
+  { 
+    "id": "clistyle",
     "name": "Command Line Interface style library",
     "shortName":"CLI Style",
     "icon": "clistyle.png",
     "version":"0.01",
     "description": "Library for cli styled apps",
     "tags": "widget",
+    "supports": ["BANGLEJS"],
     "type": "widget",
     "storage": [
       {"name":"clistyle","url":"clistyle.js"}
