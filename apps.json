@@ -1808,6 +1808,19 @@
     "data": [{"name":"toucher.json"}]
   },
   {
+    "id": "clilauncher",
+    "name": "CLI Launcher",
+    "shortName": "clilauncher",
+    "version": "0.01",
+    "description": "CLI style based launcher.",
+    "icon": "app.png",
+    "type": "launch",
+    "tags": "tool,system,launcher",
+    "supports": ["BANGLEJS","BANGLEJS2"],
+    "storage": [
+      {"name":"clilauncher.app.js","url":"app.js"}]
+  },
+  {
     "id": "balltastic",
     "name": "Balltastic",
     "version": "0.02",
