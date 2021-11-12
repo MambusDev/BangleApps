@@ -1,6 +1,32 @@
 let pos = 0;
 let id = null;
-let hideCallback = undefined;
+let hideCallback;
+
+// returns 18x18 px, x-bit optimal icons 
+function getIcon(src_id) {
+  src_id_lc = src_id.toLowerCase();
+
+  switch(src_id_lc) {
+    case 'gmail': 
+      return atob("EhLDAP//fe/73hznut5Mu6SxXe8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC2Ekkky0AC2zkk+W4AC22sl224AC2S2S2S4AC1KW2xy4AC1NS2Ny4AC1NqRty4AC1N9pNy4AC1fk9ty4AC18knty4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
+    case 'whatsapp':
+      return atob("EhLCAP//oy1a1wEdAAAAAAFVVVVUFVVVVUFVqqVUFWqqlUFaVVpUFppVaUFppVaUFppVacFpaZacFpWqacFZVqa8FaVVp8Fqqqn8Fqqqf8FVVX/8FVf//8AAAAAA");
+    case 'facebook':
+      return atob("EhLB/9I6//8AAAAAAABgAHgAPgAfAAeAAcAB/gB/gB/gAcAAcAAcAAcAAcAAcAAcAA==");
+    case 'heise online':
+      return atob("EhLBAP//ZSkB8AH/AcBw4AwwYZwYJgwJgwJh2JhmJjuRjMRzMAwAA4AAcAgHHAB8AA==");
+    case 'linkedin':
+      return atob("EhLB/9YD//8AAAAAAYAA8AA8AAYAAAGA9/g9/g9zg9zw9zw9zw9zw9zwZhgAAAAAAA==");
+    case 'der spiegel':
+      return atob("EhLB/yLi//8AAAAAAAAAH+AH+AHOAHOAHAAH+AH+AAOAHOAHOAH+AH+AAAAAAAAAAA==");
+    case 'youtube':
+      return atob("EhLBAYLI///////////+AAEAAAAAABAABgAB4AB4ABgAAAAAAAAACAAH////////8A==");
+    case 'kalender':
+    case 'calendar':
+      return atob("EhLDAP//Z+Ke7xi+Pefb1jSVes4AAAAAAAAAABgAAAMAAAFkkkksgAAnEkkk4kAAnEkkk4kAAkkkkkkkAAkkkkkkkABJJJJJJIABLry2ddIABLry2ddIABKqySVVIABRx3+uOIABKKJJRRIABRx3+uOIABKKJJRRIADySSSSScAABttttsAAAAAAAAAAAA==");
+    default: return undefined;
+  }
+}
 
 /**
  * Fit text into area, trying to insert newlines between words
@@ -107,9 +133,15 @@ exports.show = function(options) {
     const title = options.title||options.src;
     g.setColor(g.theme.fg).setFontAlign(-1, -1, 0).setFont("6x8", 2);
     g.drawString(title.trim().substring(0, 13), x+25,y+3);
-    if (options.title && options.src) {
-      g.setFont("6x8", 1).setFontAlign(1, 1, 0);
-      g.drawString(options.src.substring(0, 10), g.getWidth()-23,y+18);
+    if (options.title && options.src) {   
+      const icon = getIcon(options.src);
+      // If icon is supported, draw it:
+      if(icon != undefined) {
+        g.drawImage(icon, g.getWidth() - 48, y + 1);
+      } else {
+        g.setFont("6x8", 1).setFontAlign(1, 1, 0);
+        g.drawString(options.src.substring(0, 10), g.getWidth()-23,y+18);
+      }
     }
   }
   // we always need to pad because of the curved edges of the screen
