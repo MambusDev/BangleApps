@@ -21,6 +21,8 @@ function getIcon(src_id) {
       return atob("EhLB/yLi//8AAAAAAAAAH+AH+AHOAHOAHAAH+AH+AAOAHOAHOAH+AH+AAAAAAAAAAA==");
     case 'youtube':
       return atob("EhLBAYLI///////////+AAEAAAAAABAABgAB4AB4ABgAAAAAAAAACAAH////////8A==");
+    case '9gag':
+      return atob("EhLBAP//BCEAwAD8AH+Af/h+H58D4/P4f/4H+4B44Aw4AA4cD4+H4f/gH+AD8AAwAA==");
     case 'kalender':
     case 'calendar':
       return atob("EhLDAP//Z+Ke7xi+Pefb1jSVes4AAAAAAAAAABgAAAMAAAFkkkksgAAnEkkk4kAAnEkkk4kAAkkkkkkkAAkkkkkkkABJJJJJJIABLry2ddIABLry2ddIABKqySVVIABRx3+uOIABKKJJRRIABRx3+uOIABKKJJRRIADySSSSScAABttttsAAAAAAAAAAAA==");
