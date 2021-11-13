@@ -1,8 +1,5 @@
 var WeekDays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
-var Commands = ["","set time","gps enable","gps disable","change tz"];
-var currentCommand = Commands[0];
-
 var locale = require("locale");
 var cli = require("clistyle");
 cli.setFontSize(3);
@@ -10,11 +7,6 @@ cli.setFontSize(3);
 function drawAll(){
   updateTime();
   updateDate(new Date());
-  updateCmd(currentCommand);
-}
-
-function updateCmd(cmd){
-  cli.printLine(cmd, cli.textColor.green, 4, true);
 }
 
 function updateDate(now){
@@ -24,11 +16,22 @@ function updateDate(now){
   cli.printLine("CW"+getWeekNumber(now).toString(),cli.textColor.green, 3, false);
 }
 
+function ISO8601_week_no(dt) 
+{
+  var tdt = new Date(dt.valueOf());
+  var dayn = (dt.getDay() + 6) % 7;
+  tdt.setDate(tdt.getDate() - dayn + 3);
+  var firstThursday = tdt.valueOf();
+  tdt.setMonth(0, 1);
+  if (tdt.getDay() !== 4) 
+  {
+    tdt.setMonth(0, 1 + ((4 - tdt.getDay()) + 7) % 7);
+  }
+  return 1 + Math.ceil((firstThursday - tdt) / 604800000);
+}
+
 function getWeekNumber(d) {
-  let now = d;
-  let onejan = new Date(now.getFullYear(), 0, 1);
-  let week = Math.ceil((((now.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
-  return week;
+  return ISO8601_week_no(d);
 }
 
 function updateTime(){
@@ -43,64 +46,14 @@ function updateTime(){
     updateDate(now);
 }
 
-function searchStringInArray (str, strArray) {
-    for (var j=0; j<strArray.length; j++) {
-        if (strArray[j].match(str)) return j;
-    }
-    return -1;
-}
-
-function nextCommand(){
-  let max = Commands.length - 1;
-  let index = searchStringInArray(currentCommand, Commands);
-  
-  // Default state:
-  currentCommand = Commands[0];
-  
-  if (index != -1) {
-    if (index == max) {
-      currentCommand = Commands[0];
-    } else {
-      currentCommand = Commands[index + 1];
-    }
-  }
-  updateCmd(currentCommand);
-}
-
-function previousCommand(){
-  let max = Commands.length - 1;
-  let index = searchStringInArray(currentCommand, Commands);
-  
-  // Default state:
-  currentCommand = Commands[0];
-  
-  if (index != -1) {
-    if (index == 0) {
-      currentCommand = Commands[max];
-    } else {
-      currentCommand = Commands[index - 1];
-    }
-  }
-  updateCmd(currentCommand);
-}
-
-function enter() {
-  if (currentCommand == "") {
-    Bangle.showLauncher();
-  } else {
-    // run command
-  }
-}
-
 g.clear();
 Bangle.loadWidgets();  
 Bangle.drawWidgets();
 drawAll();
+
 Bangle.on('lcdPower',function(on) {
   if (on)
     drawAll();
 });
 
-setWatch(enter, BTN2, {repeat:true,edge:"falling"});
-setWatch(previousCommand, BTN1, {repeat:true,edge:"falling"});
-setWatch(nextCommand, BTN3, {repeat:true,edge:"falling"});
+setWatch(Bangle.showLauncher, BTN2, {repeat:false, edge:"falling"});
