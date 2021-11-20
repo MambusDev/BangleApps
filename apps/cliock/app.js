@@ -42,6 +42,7 @@ function updateTime(){
   h = h>=10?h:"0"+h;
   m = m>=10?m:"0"+m;
   cli.printLine(h+":"+m,cli.textColor.green, 0, false);
+  cli.printLine("", cli.textColor.green, 4, true);
   if(now.getMinutes() == 0)
     updateDate(now);
 }
