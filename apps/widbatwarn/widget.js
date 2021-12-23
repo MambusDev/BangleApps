@@ -19,30 +19,35 @@
   }
 
   let warning = false; // did we show the warning already?
-  function check() {
-    if (Bangle.isCharging()
-      || E.getBattery()>setting("percentage")) {
-      require("notify").hide({id: "widbatwarn"});
-      warning = false;
-      return;
-    }
-    if (warning) return; // already warned
-    warning = true; // only show once (until we recharge)
+
+  function battWarnShow() {
     require("notify").show({
       size: 56, id: "widbatwarn",
       // battery-low.png
       icon: require("heatshrink").decompress(atob("jEYwgfchnM5nABaQJCBoQLSAhAL/Bf6bHAAYLpACgA==")),
       title: "Low Battery",
-      render: a => {
-        g.setFont("6x8", 2).setFontAlign(-1, 0)
-          .setColor(-1).drawString("Battery: ", a.x+8, a.y+a.h/2)
-          .setColor(0xF800).drawString(`${E.getBattery()}%`, a.x+8+100, a.y+a.h/2);
-      },
+      body: "Battery: " + E.getBattery().toString() + "%"
     });
     if (setting("buzz")
       && !(require('Storage').readJSON('setting.json',1)||{}).quiet) {
       Bangle.buzz();
     }
+  }
+
+  function battWarnHide() {
+    require("notify").hide({id: "widbatwarn"});
+  }
+
+  function check() {
+    if (Bangle.isCharging()
+      || E.getBattery()>setting("percentage")) {
+      battWarnHide();
+      warning = false;
+      return;
+    }
+    if (warning) return; // already warned
+    warning = true; // only show once (until we recharge)
+    battWarnShow();
   }
 
   Bangle.on("charging", check);
