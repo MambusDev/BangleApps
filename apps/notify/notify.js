@@ -179,6 +179,11 @@ exports.show = function(options) {
   }
   anim();
   Bangle.on("touch", exports.hide);
+
+  setWatch(function(e) {
+    exports.hide();
+  }, BTN1, { repeat: false, edge: 'rising', debounce: 130 });
+  
   if (options.onHide)
     hideCallback = options.onHide;
 };
