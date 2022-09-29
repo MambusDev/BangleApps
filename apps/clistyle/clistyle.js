@@ -1,4 +1,4 @@
-const margin = 40;  // Top and bottom
+const margin = 40; // Top and bottom
 
 const textColor = {
   green: 0,
@@ -19,7 +19,11 @@ require("FontDylex7x13").add(Graphics);
 //const builtin4x6 = {name:"4x6", width:4, height:6};
 //const builtin6x8 = {name:"6x8", width:6, height:8};
 //const haxornarrow7x17 = {name:"HaxorNarrow7x17", width:7, height:17};
-const dylex7x13 = {name:"Dylex7x13", width:7, height:13};
+const dylex7x13 = {
+  name: "Dylex7x13",
+  width: 7,
+  height: 13
+};
 
 // Set font here:
 const cliFont = dylex7x13;
@@ -42,7 +46,7 @@ var cursor = {
 
 // Private functions
 function cliLineHeight() {
- return 1.25 * cliFont.height * cliFontSize; 
+  return 1.25 * cliFont.height * cliFontSize;
 }
 
 function cliColumnWidth() {
@@ -55,33 +59,33 @@ function cliLineStart() {
 }
 
 function setTextColorRgb(color) {
-  g.setBgColor(0,0,0);
-  switch(color) {
+  g.setBgColor(0, 0, 0);
+  switch (color) {
     case textColor.green:
-      g.setColor(0,1,0);
+      g.setColor(0, 1, 0);
       break;
     case textColor.yellow:
-      g.setColor(1,1,0);
+      g.setColor(1, 1, 0);
       break;
     case textColor.red:
-      g.setColor(1,0,0);
+      g.setColor(1, 0, 0);
       break;
     case textColor.white:
-      g.setColor(1,1,1);
+      g.setColor(1, 1, 1);
       break;
     case textColor.highlighted:
     case textColor.black:
-      g.setColor(0,0,0);
+      g.setColor(0, 0, 0);
       break;
     default:
-      g.setColor(0,1,0);
+      g.setColor(0, 1, 0);
   }
 }
 
-function writeLineStart(line){
+function writeLineStart(line) {
   setTextColorRgb(textColor.green);
   g.setFont(cliFont.name, cliFontSize);
-  g.setFontAlign(-1,-1);
+  g.setFontAlign(-1, -1);
   g.drawString(">", cliLineStart() / 4, margin + line * cliLineHeight());
 }
 
@@ -90,21 +94,21 @@ function clearLine(line) {
   let y1 = margin + line * cliLineHeight();
   let x2 = cliWidth;
   let y2 = y1 + cliLineHeight();
-  g.setColor(0,0,0);
-  g.fillRect(x1,y1,x2,y2);  
+  g.setColor(0, 0, 0);
+  g.fillRect(x1, y1, x2, y2);
 }
 
-function writeLine(str, line, color){
+function writeLine(str, line, color) {
   g.setFont(cliFont.name, cliFontSize);
-  g.setFontAlign(-1,-1);
+  g.setFontAlign(-1, -1);
   if (color == textColor.highlighted) {
     //draw green / white rectangle
-    g.setColor(1,1,1);
+    g.setColor(1, 1, 1);
     let x1 = cliLineStart();
     let y1 = margin + line * cliLineHeight();
     let x2 = x1 + str.length * cliColumnWidth();
     let y2 = y1 + cliLineHeight();
-    g.fillRect(x1,y1,x2,y2); 
+    g.fillRect(x1, y1, x2, y2);
   }
   setTextColorRgb(color);
   g.drawString(str, cliLineStart(), margin + line * cliLineHeight());
@@ -112,21 +116,21 @@ function writeLine(str, line, color){
 
 function drawCursor() {
   let lineWidth = 1;
-  
+
   let x1 = cursor.x;
-  let x2 = x1 + lineWidth; 
+  let x2 = x1 + lineWidth;
   let y1 = cursor.y;
   let y2 = y1 + cliFont.height * cliFontSize;
-  
+
   g.fillRect(x1, y2, x2, y1);
 }
 
 function cursorAnimation() {
-  if (cursor.initialized){
+  if (cursor.initialized) {
     setTextColorRgb(textColor.green);
-    g.setFontAlign(-1,-1);
+    g.setFontAlign(-1, -1);
     //writeLineStart(cursor.line);
-    
+
     if (cursor.show) {
       drawCursor();
     } else {
@@ -140,12 +144,12 @@ function cursorAnimation() {
 
 // Public functions
 function setFontSize(size) {
-   cliFontSize = size; 
+  cliFontSize = size;
 }
 
 function clear(clear_widgets) {
   let lines = cliHeight / cliLineHeight();
-  
+
   if (clear_widgets) {
     g.clear();
   } else {
@@ -153,8 +157,13 @@ function clear(clear_widgets) {
       clearLine(i);
     }
   }
-  
-  cursor = {initialized: false, x: 0, y: 0, show: false};
+
+  cursor = {
+    initialized: false,
+    x: 0,
+    y: 0,
+    show: false
+  };
 }
 
 function printLine(str, color, line, update_cursor) {
@@ -168,6 +177,70 @@ function printLine(str, color, line, update_cursor) {
   }
 }
 
+function printBlock(color) {
+  if (!cursor.initialized) {
+    return;
+  }
+  const blockMargin = cliFontSize;
+  const blockSize = cliColumnWidth() - 2 * blockMargin;
+
+  let x1 = cursor.x + blockMargin;
+  let y1 = cursor.y + blockMargin;
+  let x2 = x1 + blockSize;
+  let y2 = y1 + (cliFont.height - 2 * blockMargin) * cliFontSize;
+
+  setTextColorRgb(color);
+  g.fillRect(x1, y1, x2, y2);
+  cursor.x = cursor.x + cliColumnWidth();
+}
+
+function print(str, color) {
+  if (!cursor.initialized) {
+    return;
+  }
+
+  g.setFont(cliFont.name, cliFontSize);
+  g.setFontAlign(-1, -1);
+  if (color == textColor.highlighted) {
+    //draw green / white rectangle
+    g.setColor(1, 1, 1);
+    let x1 = cliLineStart();
+    let y1 = margin + line * cliLineHeight();
+    let x2 = x1 + str.length * cliColumnWidth();
+    let y2 = y1 + cliLineHeight();
+    g.fillRect(x1, y1, x2, y2);
+  }
+  setTextColorRgb(color);
+  g.drawString(str, cursor.x, cursor.y);
+
+  cursor.x += g.stringWidth(str);
+}
+
+function printBar(color, line, max, value, detail) {
+  // The bar doesn't need a cursor, so we restore
+  // it to the previous state, once we are finished
+  let cursorBackup = Object.assign({}, cursor);
+  const maxBlocks = 12 / cliFontSize;
+  let progress = Math.floor(maxBlocks * value / max);
+
+  printLine("|", color, line, true);
+
+  for (let i = 0; i < maxBlocks; i++) {
+    if (i < progress) {
+      printBlock(color);
+    } else {
+      printBlock(textColor.black);
+    }
+  }
+
+  print("|", color);
+  if (detail) {
+    let progressStr = value + "/" + max;
+    print(progressStr, color);
+  }
+  cursor = Object.assign({}, cursorBackup);
+}
+
 exports.setFontSize = function(size) {
   setFontSize(size);
 }
@@ -176,8 +249,16 @@ exports.clear = function(clear_widgets) {
   clear(clear_widgets);
 }
 
+exports.print = function(str, color) {
+  print(str, color);
+}
+
 exports.printLine = function(str, color, line, update_cursor) {
   printLine(str, color, line, update_cursor);
+}
+
+exports.printBar = function(color, line, max, value, detail) {
+  printBar(color, line, max, value, detail);
 }
 
 exports.textColor = textColor;
@@ -185,8 +266,19 @@ exports.textColor = textColor;
 var animationInterval = setInterval(cursorAnimation, 500);
 
 // Unit test
+//let progress = 0;
+
+//function updateProgress() {
+//  if (progress < 100) {
+//    progress = (progress + 4);
+//    printBar(textColor.white, 4, 100, progress, true);
+//  }
+//}
+//var progressIntervall = setInterval(updateProgress, 250);
+
 //clear(true);
-//setFontSize(2);
+//setFontSize(1);
 //printLine("12:33 Uhr", textColor.green, 1, false);
 //printLine("00p00", textColor.green, 2, true);
 //printLine(cursor.x, textColor.green, 3, false);
+//printBar(textColor.white, 4, 100, progress, true);
