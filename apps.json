@@ -503,18 +503,18 @@
     ]
   },
   {
-    "id": "_aclock",
+    "id": "caclock",
     "name": "Custom Analog Clock",
     "version": "0.1",
     "description": "An Analog Clock",
-    "icon": "_aclock-icon.png",
+    "icon": "caclock-icon.png",
     "type": "clock",
     "tags": "clock",
     "supports": ["BANGLEJS","BANGLEJS2"],
     "allow_emulator": true,
     "storage": [
-      {"name":"_aclock.app.js","url":"_aclock.js"},
-      {"name":"_aclock-icon.img","url":"_aclock-icon.js","evaluate":true}
+      {"name":"caclock.app.js","url":"caclock.js"},
+      {"name":"caclock-icon.img","url":"caclock-icon.js","evaluate":true}
     ]
   },
   {
