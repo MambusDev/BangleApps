@@ -503,6 +503,21 @@
     ]
   },
   {
+    "id": "_aclock",
+    "name": "Custom Analog Clock",
+    "version": "0.1",
+    "description": "An Analog Clock",
+    "icon": "_aclock-icon.png",
+    "type": "clock",
+    "tags": "clock",
+    "supports": ["BANGLEJS","BANGLEJS2"],
+    "allow_emulator": true,
+    "storage": [
+      {"name":"_aclock.app.js","url":"_aclock.js"},
+      {"name":"_aclock-icon.img","url":"_aclock-icon.js","evaluate":true}
+    ]
+  },
+  {
     "id": "clock2x3",
     "name": "2x3 Pixel Clock",
     "version": "0.05",
