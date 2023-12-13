@@ -41,7 +41,7 @@ const kSecondsMarkerWidth = {normal: 1, thick: 20};
 let gTimer = null;
 let gCurrentDate = new Date();
 let gCurrentBattery = E.getBattery();
-let gCurrentHrm = 60;
+let gCurrentHrm = 0;
 let gCurrentSteps = 0;
 let gHrmState = false;
 
@@ -364,7 +364,7 @@ Bangle.on('lcdPower', (on) => {
   if (on) {
     DrawAll();
     startTimers();
-    //Bangle.drawWidgets();
+    Bangle.drawWidgets();
   } else {
     if (gTimer) {
       clearInterval(gTimer);
@@ -375,8 +375,8 @@ Bangle.on('lcdPower', (on) => {
 g.clear();
 startTimers();
 DrawAll();
-//Bangle.loadWidgets();
-//Bangle.drawWidgets();
+Bangle.loadWidgets();
+Bangle.drawWidgets();
 
 //HRM Controller.
 setWatch(function(){
@@ -393,7 +393,6 @@ setWatch(function(){
     Bangle.buzz();
     Bangle.setHRMPower(0);
     gHrmState = false;
-    //gCurrentHrm = [];
   }
 }, BTN1, { repeat: true, edge: "falling" });
 
