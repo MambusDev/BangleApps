@@ -6,7 +6,6 @@
   const SETTINGS_FILE = 'simplepedom.settings.json';
   const AREAS = ['tl', 'tr', 'bl', 'br'];
   const LINES = ['Steps', 'Distance', 'Hide'];
-
   // initialize with default settings...
   let s = {
     // Advanced settings
@@ -16,12 +15,13 @@
     'intervalResetActive' : 30000,
     'stepSensitivity' : 80,
     'stepLength' : 75,
-    'lineOne': LINES[0],
-    'lineTwo': LINES[1],
     // Standard settings
     'stepGoal' : 10000,
+    // Visual settings
     'showWidget': false,
     'widgetArea': "tl",
+    'lineOne': LINES[0],
+    'lineTwo': LINES[1]
   };
   // ...and overwrite them with any saved values
   // This way saved values are preserved if a new version adds more settings
@@ -39,53 +39,97 @@
     };
   }
 
+  const advanced_menu = {
+    '': { 'title': 'widspedom:advanced' },
+    '< Back': () => E.showMenu(menu),
+    'Max time (ms)': {
+      value: s.cMaxTime,
+      min: 0,
+      max: 10000,
+      step: 100,
+      onchange: save('cMaxTime'),
+    },
+    'Min time (ms)': {
+      value: s.cMinTime,
+      min: 0,
+      max: 500,
+      step: 10,
+      onchange: save('cMinTime'),
+    },
+    'Step threshold': {
+      value: s.stepThreshold,
+      min: 0,
+      max: 100,
+      step: 1,
+      onchange: save('stepThreshold'),
+    },
+    'Act.Res. (ms)': {
+      value: s.intervalResetActive,
+      min: 100,
+      max: 100000,
+      step: 1000,
+      onchange: save('intervalResetActive'),
+    },
+    'Step sens.': {
+      value: s.stepSensitivity,
+      min: 0,
+      max: 1000,
+      step: 10,
+      onchange: save('stepSensitivity'),
+    },
+    'Step length (cm)': {
+      value: s.stepLength,
+      min: 1,
+      max: 150,
+      step: 1,
+      onchange: save('stepLength'),
+    }
+  };
+
+  const visuals_menu = {
+    '': { 'title': 'widspedom:visuals' },
+    '< Back': () => E.showMenu(menu),
+    'Show widget': {
+      value: s.showWidget,
+      format : v => v?"On":"Off",
+      onchange: save('showWidget'),
+    },
+    'Widget area': {
+      format: () => s.widgetArea,
+      onchange:  function () {
+        // cycles through options
+        const oldIndex = AREAS.indexOf(s.widgetArea);
+        const newIndex = (oldIndex + 1) % AREAS.length;
+        s.widgetArea = AREAS[newIndex];
+        save('widgetArea')(s.widgetArea);
+      },
+    },
+    'Line One': {
+      format: () => s.lineOne,
+      onchange: function () {
+        // cycles through options
+        const oldIndex = LINES.indexOf(s.lineOne);
+        const newIndex = (oldIndex + 1) % LINES.length;
+        s.lineOne = LINES[newIndex];
+        save('lineOne')(s.lineOne);
+      },
+    },
+    'Line Two': {
+      format: () => s.lineTwo,
+      onchange: function () {
+        // cycles through options
+        const oldIndex = LINES.indexOf(s.lineTwo);
+        const newIndex = (oldIndex + 1) % LINES.length;
+        s.lineTwo = LINES[newIndex];
+        save('lineTwo')(s.lineTwo);
+      },
+    },
+  };
+
   const menu = {
     '': { 'title': 'widspedom' },
     '< Back': back,
-    'Advanced': {
-      'Max time (ms)': {
-        value: s.cMaxTime,
-        min: 0,
-        max: 10000,
-        step: 100,
-        onchange: save('cMaxTime'),
-      },
-      'Min time (ms)': {
-        value: s.cMinTime,
-        min: 0,
-        max: 500,
-        step: 10,
-        onchange: save('cMinTime'),
-      },
-      'Step threshold': {
-        value: s.stepThreshold,
-        min: 0,
-        max: 100,
-        step: 1,
-        onchange: save('stepThreshold'),
-      },
-      'Act.Res. (ms)': {
-        value: s.intervalResetActive,
-        min: 100,
-        max: 100000,
-        step: 1000,
-        onchange: save('intervalResetActive'),
-      },
-      'Step sens.': {
-        value: s.stepSensitivity,
-        min: 0,
-        max: 1000,
-        step: 10,
-        onchange: save('stepSensitivity'),
-      },
-      'Step length (cm)': {
-        value: s.stepLength,
-        min: 1,
-        max: 150,
-        step: 1,
-        onchange: save('stepLength'),
-      },
-    },
+    'Advanced': () => E.showMenu(advanced_menu),
     'Step goal': {
       value: s.stepGoal,
       min: 1000,
@@ -93,43 +137,7 @@
       step: 1000,
       onchange: save('stepGoal'),
     },
-    'Visuals' : {
-      'Show widget': {
-        value: s.showWidget,
-        format : v => v?"On":"Off",
-        onchange: save('showWidget'),
-      },
-      'Widget area': {
-        format: () => s.widgetArea,
-        onchange:  function () {
-          // cycles through options
-          const oldIndex = AREAS.indexOf(s.widgetArea);
-          const newIndex = (oldIndex + 1) % AREAS.length;
-          s.widgetArea = AREAS[newIndex];
-          save('widgetArea')(s.widgetArea);
-        },
-      },
-      'Line One': {
-        format: () => s.lineOne,
-        onchange: function () {
-          // cycles through options
-          const oldIndex = LINES.indexOf(s.lineOne);
-          const newIndex = (oldIndex + 1) % LINES.length;
-          s.lineOne = LINES[newIndex];
-          save('lineOne')(s.lineOne);
-        },
-      },
-      'Line Two': {
-        format: () => s.lineTwo,
-        onchange: function () {
-          // cycles through options
-          const oldIndex = LINES.indexOf(s.lineTwo);
-          const newIndex = (oldIndex + 1) % LINES.length;
-          s.lineTwo = LINES[newIndex];
-          save('lineTwo')(s.lineTwo);
-        },
-      },
-    }
+    'Visuals' : () => E.showMenu(visuals_menu)
   };
   E.showMenu(menu);
 });
