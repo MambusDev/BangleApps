@@ -20,8 +20,8 @@
   var distance = 0; //distance travelled
 
   const s = require('Storage');
-  const SETTINGS_FILE = 'simplepedom.settings.json';
-  const PEDOMFILE = "simplepedom.steps.json"; // Used to keep data after reboot
+  const SETTINGS_FILE = 'widspedom.settings.json';
+  const PEDOMFILE = "widspedom.steps.json"; // Used to keep data after reboot
   
   let settings;
   //load settings
@@ -73,7 +73,7 @@
   function resetActive() {
     active = 0;
     steps = 0;
-    if (Bangle.isLCDOn()) WIDGETS["simplepedom"].draw();
+    if (Bangle.isLCDOn()) WIDGETS["widspedom"].draw();
   }
 
   function calcSteps() {
@@ -196,12 +196,12 @@
   Bangle.on('step', (up) => {
     steps++; //increase step count
     calcSteps();
-    if (Bangle.isLCDOn()) WIDGETS["simplepedom"].draw();
+    if (Bangle.isLCDOn()) WIDGETS["widspedom"].draw();
   });
 
   // redraw when the LCD turns on
   Bangle.on('lcdPower', function(on) {
-    if (on) WIDGETS["simplepedom"].draw();
+    if (on) WIDGETS["widspedom"].draw();
   });
 
   //Read data from file and set variables
@@ -218,5 +218,5 @@
   setStepSensitivity(setting('stepSensitivity')); //set step sensitivity (80 is standard, 400 is muss less sensitive)
 
   //Add widget
-  WIDGETS["simplepedom"]={area:setting('widgetArea'),width:width,draw:draw, getSteps:()=>stepsCounted};
+  WIDGETS["widspedom"]={area:setting('widgetArea'),width:width,draw:draw, getSteps:()=>stepsCounted};
 })();

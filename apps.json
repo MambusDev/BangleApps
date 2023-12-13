@@ -1930,17 +1930,17 @@
     "id": "widspedom",
     "name": "Simple Pedometer Widget",
     "shortName": "Pedometer Widget",
-    "version": "0.1",
+    "version": "0.2",
     "description": "Pedometer that filters out arm movement and displays a step goal progress.",
-    "icon": "simplepedom.png",
+    "icon": "widspedom.png",
     "type": "widget",
     "tags": "tool,widget",
     "supports": ["BANGLEJS","BANGLEJS2"],
     "readme": "README.md",
     "storage": [
-      {"name":"simplepedom.wid.js","url":"simplepedom.widget.js"},
-      {"name":"simplepedom.settings.js","url":"simplepedom.settings.js"},
-      {"name":"simplepedom.img","url":"simplepedom-icon.js","evaluate":true}
+      {"name":"widspedom.wid.js","url":"widspedom.widget.js"},
+      {"name":"widspedom.settings.js","url":"widspedom.settings.js"},
+      {"name":"widspedom.img","url":"widspedom-icon.js","evaluate":true}
     ]
   },
   {
