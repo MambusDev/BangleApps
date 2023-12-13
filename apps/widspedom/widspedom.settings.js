@@ -3,7 +3,7 @@
  * @param {function} back Use back() to return to settings menu
  */
 (function(back) {
-  const SETTINGS_FILE = 'simplepedom.settings.json';
+  const SETTINGS_FILE = 'widspedom.settings.json';
   const AREAS = ['tl', 'tr', 'bl', 'br'];
   const LINES = ['Steps', 'Distance', 'Hide'];
   // initialize with default settings...
