@@ -1926,7 +1926,7 @@
       {"name":"activepedom.app.js","url":"app.js"}
     ]
   },
-   {
+  {
     "id": "simplepedom",
     "name": "Simple Pedometer Widget",
     "shortName": "Simple Pedometer Widget",
@@ -1939,7 +1939,7 @@
     "storage": [
       {"name":"simplepedom.wid.js","url":"simplepedom.widget.js"},
       {"name":"simplepedom.settings.js","url":"simplepedom.settings.js"},
-      {"name":"simplepedom.img","url":"simplepedom-icon.js","evaluate":true},
+      {"name":"simplepedom.img","url":"simplepedom-icon.js","evaluate":true}
     ]
   },
   {
