@@ -112,7 +112,7 @@ exports.show = function(options) {
     text=fitWords(options.body, maxRows, maxChars);
     // set size based on newlines
     if (!size) size = 28 + (text.match(/\n/g).length+1)*8;
-  } else size = 20;
+  } else size = 40; // Default size (e.g. for music), needed for options.src
   if (size>80) size = 80;
   const oldMode = Bangle.getLCDMode();
   // TODO: throw exception if double-buffered?
@@ -157,6 +157,7 @@ exports.show = function(options) {
     else iw = i[0];
     x += iw;w -= iw;
   }
+
   // body text
   if (options.body) {
     g.setColor(g.theme.fg).setFont("6x8", 1).setFontAlign(-1, -1, 0).drawString(text, x+6,y+4);
@@ -189,10 +190,10 @@ exports.show = function(options) {
     exports.hide();
   }, BTN1, { repeat: false, edge: 'rising', debounce: 130 });
 
-  // Clear the notification after 30 seconds
-  const timeout_in_msec = 30000;
+  // Clear the notification after 15 seconds
+  const timeout_in_msec = 15000;
 
-  setTimeout(() => {
+  timeout_id = setTimeout(() => {
     exports.hide();
   }, timeout_in_msec);
 
