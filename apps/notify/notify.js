@@ -1,6 +1,8 @@
 let pos = 0;
 let id = null;
 let hideCallback;
+let btn1_watch_id; // id of the notification clear btn1 event
+let timeout_id; // id of the notification clear timer
 
 // returns 18x18 px, x-bit optimal icons 
 function getIcon(src_id) {
@@ -178,12 +180,22 @@ exports.show = function(options) {
     if (pos > -size) setTimeout(anim, 15);
   }
   anim();
+
+  // Clear the notification on touch event
   Bangle.on("touch", exports.hide);
 
-  setWatch(function(e) {
+  // Clear the notification on btn1 event
+  btn1_watch_id = setWatch(function(e) {
     exports.hide();
   }, BTN1, { repeat: false, edge: 'rising', debounce: 130 });
-  
+
+  // Clear the notification after 30 seconds
+  const timeout_in_msec = 30000;
+
+  setTimeout(() => {
+    exports.hide();
+  }, timeout_in_msec);
+
   if (options.onHide)
     hideCallback = options.onHide;
 };
@@ -199,7 +211,12 @@ exports.hide = function(options) {
   if (hideCallback) hideCallback({id:id});
   hideCallback = undefined;
   id = null;
+
+  // Remove all listeners
   Bangle.removeListener("touch", exports.hide);
+  clearWatch(btn1_watch_id);
+  clearTimeout(timeout_id);
+
   function anim() {
     pos += 4;
     if (pos > 0) pos = 0;
