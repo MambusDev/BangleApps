@@ -11,3 +11,4 @@
 0.12: Add social media icons of common apps
 0.13: Add 9gag icon
 0.14: Allow BTN1 to remove notifications
+0.15: Notifications are automatically removed after 60 seconds. Music notification fixed.
