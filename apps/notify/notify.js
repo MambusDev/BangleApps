@@ -190,8 +190,8 @@ exports.show = function(options) {
     exports.hide();
   }, BTN1, { repeat: false, edge: 'rising', debounce: 130 });
 
-  // Clear the notification after 15 seconds
-  const timeout_in_msec = 15000;
+  // Clear the notification after 60 seconds
+  const timeout_in_msec = 60000;
 
   timeout_id = setTimeout(() => {
     exports.hide();
