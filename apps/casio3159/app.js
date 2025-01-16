@@ -17,6 +17,9 @@ const margin = {top: ymax / 8, bottom: 2, left: 6, right: 6};
 // Positioning of battery status
 const battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
 
+const storage = require('Storage');
+const SETTINGS_FILE = 'setting.json';
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Icon images (converted with https://www.espruino.com/Image+Converter)
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,15 +81,13 @@ function getBatteryLevel() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// Bluetooth settings and state
+// Read settings
 ////////////////////////////////////////////////////////////////////////////////////////////
 let settings;
-const s = require('Storage');
-const SETTINGS_FILE = 'setting.json';
 
 //load settings
 function loadSettings() {
-  settings = s.readJSON(SETTINGS_FILE, 1) || {};
+  settings = storage.readJSON(SETTINGS_FILE, 1) || {};
 }
 
 //return setting
@@ -98,6 +99,14 @@ function setting(key) {
   };
   if (!settings) { loadSettings(); }
   return (key in settings) ? settings[key] : DEFAULTS[key];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Read alarms
+////////////////////////////////////////////////////////////////////////////////////////////
+
+function alarmIsSet() {
+  return (storage.readJSON('alarm.json',1)||[]).some(alarm=>alarm.on);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,16 +212,16 @@ function drawBtStatus() {
     console.info("Bluetooth enabled");
     if (NRF.getSecurityStatus().connected) {
       console.info("Bluetooth connected");
-      g.drawImage(bt_con_icon, xmin + margin.left, ymin + 1.75 * margin.top, {scale:0.4});
+      g.drawImage(bt_con_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
     } else {
-      g.drawImage(bt_icon, xmin + margin.left, ymin + 1.75 * margin.top, {scale:0.4});
+      g.drawImage(bt_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
     }
   } else {
     g.setColor(0.9,1,0.9); // Green-Gray
     x1 = xmin + margin.left;
-    y1 = ymin + 1.75 * margin.top;
-    x2 = x1 + 24; // Icon size = 48x48
-    y2 = y1 + 24; // Icon size = 48x48
+    y1 = ymin + 1.5 * margin.top;
+    x2 = x1 + 48 * 0.4; // Icon size = 48x48
+    y2 = y1 + 48 * 0.4; // Icon size = 48x48
     g.fillRect(x1, y1, x2, y2);
   }
 }
@@ -223,9 +232,26 @@ function drawBeepStatus() {
 
   if (setting("beep") != false) {
     console.info("Beep enabled");
-    g.drawImage(beep_icon, xmin + margin.left + 24, ymin + 1.75 * margin.top, {scale:0.4});
+    g.drawImage(beep_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
   } else {
-    g.drawImage(mute_icon, xmin + margin.left + 24, ymin + 1.75 * margin.top, {scale:0.4});
+    g.drawImage(mute_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
+  }
+}
+
+function drawAlarmStatus() {
+  g.setColor(0,0,0); // Black
+  g.setBgColor(0,0,0); // Black
+
+  if (alarmIsSet()) {
+    console.info("Alarm set");
+    g.drawImage(bell_icon, xmin + margin.left, ymin + 1.5 * margin.top + 24, {scale:0.4});
+  } else {
+    g.setColor(0.9,1,0.9); // Green-Gray
+    x1 = xmin + margin.left;
+    y1 = ymin + 1.5 * margin.top + 24;
+    x2 = x1 + 48 * 0.4; // Icon size = 48x48
+    y2 = y1 + 48 * 0.4; // Icon size = 48x48
+    g.fillRect(x1, y1, x2, y2);
   }
 }
 
@@ -242,6 +268,7 @@ function drawAll() {
   drawBatteryStatus(battery);
   drawBtStatus();
   drawBeepStatus();
+  drawAlarmStatus();
 }
 
 function drawInfo() {
@@ -254,6 +281,7 @@ function drawInfo() {
   drawDate(time.day, time.month);
   drawBtStatus();
   drawBeepStatus();
+  drawAlarmStatus();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -268,8 +296,8 @@ g.clear();
 drawAll();
 
 // draw widgets
-Bangle.loadWidgets(); 
-Bangle.drawWidgets();
+//Bangle.loadWidgets(); 
+//Bangle.drawWidgets();
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Events and Callbacks
@@ -287,8 +315,8 @@ Bangle.on('lcdPower',on=>{
     secondInterval = setInterval(() => drawInfo(), 1000);
     // draw immediately
     drawAll();
-    Bangle.loadWidgets(); 
-    Bangle.drawWidgets();
+    //Bangle.loadWidgets(); 
+    //Bangle.drawWidgets();
   }
 });
 
