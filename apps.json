@@ -86,6 +86,8 @@
     "description": "Casio 3159 inspired clock",
     "icon": "app.png",
     "tags": "clock",
+    "type": "clock",
+    "screenshots": [{"url":"screenshot.png"}],
     "supports": ["BANGLEJS"],
     "allow_emulator": true,
     "storage": [
