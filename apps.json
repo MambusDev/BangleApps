@@ -84,7 +84,7 @@
     "name": "Casio 3159",
     "version": "0.01",
     "description": "Casio 3159 inspired clock",
-    "icon": "app.png",
+    "icon": "casio.img",
     "tags": "clock",
     "type": "clock",
     "screenshots": [{"url":"screenshot.png"}],
