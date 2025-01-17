@@ -427,7 +427,7 @@ function onShortPressedBTN1() {
   // Stopwatch mode
   if (modes[current_mode] == "stopwatch") {
     if (!intervalTimer) {
-      stopwatch_ticks = -1; // update will increment to 0
+      stopwatch_ticks = -10; // update will increment to 0
       updateStopwatch();
     }
   }
