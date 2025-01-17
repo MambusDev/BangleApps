@@ -22,6 +22,9 @@ const language = "German";
 
 // Button timing
 const LONG_PRESSED_TIME_MS = 750;
+// Button sounds
+const BTN_BEEP_TIME_MS = 80;
+const BTN_BEEP_FREQ_HZ = 6000;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Icon images (converted with https://www.espruino.com/Image+Converter)
@@ -122,6 +125,14 @@ function alarmIsSet() {
 // Drawing functions
 ////////////////////////////////////////////////////////////////////////////////////////////
 
+function drawTimeDot() {
+  g.setColor(0,0,0); // Black
+  g.setBgColor(0.9,1,0.9); // Green-Gray
+  g.setFont("7x11Numeric7Seg", 3);
+  g.setFontAlign(1, 1, 0); // right, bottom, normal
+  g.drawString(".", xmax - margin.right - 42, ymax - margin.bottom - 2.5 * ymax / 10, true);
+}
+
 function drawSeconds(seconds) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
@@ -130,12 +141,34 @@ function drawSeconds(seconds) {
   g.drawString(seconds, xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
 }
 
-function drawTime(hours, minutes) {
+function drawHours(hours) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
-  g.drawString(hours + ":" + minutes, xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, true);
+  g.drawString(hours, xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, true);
+}
+
+function drawTimeColon() {
+  g.setColor(0,0,0); // Black
+  g.setBgColor(0.9,1,0.9); // Green-Gray
+  g.setFont("7x11Numeric7Seg", 5);
+  g.setFontAlign(-1, 1, 0); // left, bottom, normal
+  g.drawString(":", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
+}
+
+function drawMinutes(minutes) {
+  g.setColor(0,0,0); // Black
+  g.setBgColor(0.9,1,0.9); // Green-Gray
+  g.setFont("7x11Numeric7Seg", 5);
+  g.setFontAlign(-1, 1, 0); // left, bottom, normal
+  g.drawString(minutes, xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, true); // 105 = three times font width
+}
+
+function drawTime(hours, minutes) {
+  drawHours(hours);
+  drawTimeColon();
+  drawMinutes(minutes);
 }
 
 function drawBatteryLevels() {
@@ -320,8 +353,9 @@ function drawStopwatch() {
 
   drawStaticElements();
   drawTopLeftText("ST"); // Also static here
+  drawTimeDot();
 
-  drawSeconds("." + tenmilliseconds);
+  drawSeconds(tenmilliseconds);
   drawTime(minutes, seconds);
   drawTopRightText(hours + "H");
   drawBatteryStatus(battery);
@@ -336,7 +370,7 @@ function updateStopwatch() {
   var minutes = (Math.floor(stopwatch_ticks / 6000) % 60).toString().padStart(2, '0');
   var hours = (Math.floor(stopwatch_ticks / 360000) % 24).toString(); // Not padded on purpose
 
-  drawSeconds("." + tenmilliseconds);
+  drawSeconds(tenmilliseconds);
   drawTime(minutes, seconds);
   drawTopRightText(hours + "H");
 }
@@ -445,7 +479,7 @@ const stopwatch_states = {
 const modes_fsm = new StateMachine(modes, "clock");
 const stopwatch_fsm = new StateMachine(stopwatch_states, "idle");
 
-// Create a state cycler
+// Create a state cycler (modes are switched in the same order each time)
 const modeOrder = ["clock", "stopwatch"];
 const nextMode = createStateCycler(modes_fsm, modeOrder);
 
@@ -473,7 +507,7 @@ function onLongPressedBTN2() {
 
 function onShortPressedBTN2() {
   console.debug("BTN2 short pressed");
-  if (setting("beep")) Bangle.beep(200, 4000);
+  if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
 
   // Stopwatch mode
   if (modes_fsm.getCurrentState() == "stopwatch") {
@@ -487,12 +521,12 @@ function onShortPressedBTN2() {
 
 function onLongPressedBTN1() {
   console.debug("BTN1 long pressed");
-  if (setting("beep")) Bangle.beep(200, 4000);
+  if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
 }
 
 function onShortPressedBTN1() {
   console.debug("BTN1 short pressed");
-  if (setting("beep")) Bangle.beep(200, 4000);
+  if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
 
   // Stopwatch mode
   if (modes_fsm.getCurrentState() == "stopwatch") {
@@ -504,12 +538,12 @@ function onShortPressedBTN1() {
 
 function onLongPressedBTN3() {
   console.debug("BTN3 long pressed");
-  if (setting("beep")) Bangle.beep(200, 4000);
+  if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
 }
 
 function onShortPressedBTN3() {
   console.debug("BTN3 short pressed");
-  if (setting("beep")) Bangle.beep(200, 4000);
+  if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
   nextMode();
 }
 
