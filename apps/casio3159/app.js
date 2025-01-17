@@ -20,6 +20,9 @@ const storage = require('Storage');
 const SETTINGS_FILE = 'setting.json';
 const language = "German";
 
+// Button timing
+const LONG_PRESSED_TIME_MS = 750;
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Icon images (converted with https://www.espruino.com/Image+Converter)
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -307,8 +310,6 @@ function updateClock() {
   drawAlarmStatus();
 }
 
-var stopwatch_ticks = 0; // ticks of 100 ms
-
 function drawStopwatch() {
   var battery = getBatteryLevel();
 
@@ -330,8 +331,6 @@ function drawStopwatch() {
 }
 
 function updateStopwatch() {
-  stopwatch_ticks += 10;
-
   var tenmilliseconds = (stopwatch_ticks % 100).toString().padStart(2, '0');
   var seconds = (Math.floor(stopwatch_ticks / 100) % 60).toString().padStart(2, '0');
   var minutes = (Math.floor(stopwatch_ticks / 6000) % 60).toString().padStart(2, '0');
@@ -343,6 +342,14 @@ function updateStopwatch() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+// Globals
+////////////////////////////////////////////////////////////////////////////////////////////
+var stopwatch_ticks = 0; // ticks of 10 ms
+var clockTimer;
+var stopwatchTimer;
+var tickTimer;
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // App script
 ////////////////////////////////////////////////////////////////////////////////////////////
 console.info("Booting...");
@@ -350,33 +357,97 @@ console.info("Booting...");
 g.reset();
 // Clear the screen once, at startup
 g.clear();
-// draw immediately at first
-drawClock();
-// start clock interval
-var intervalTimer = setInterval(() => updateClock(), 1000);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Modes and states
 ////////////////////////////////////////////////////////////////////////////////////////////
-const modes = ["clock", "stopwatch"];
-var current_mode = 0;
+class StateMachine {
+  constructor(states, initialState) {
+    if (!states[initialState]) {
+      throw new Error("Initial state must be a valid state");
+    }
+    this.states = states;
+    this.currentState = initialState;
 
-function nextMode() {
-  current_mode += 1;
-  current_mode = current_mode % modes.length;
-  console.info("New mode is " + modes[current_mode]);
-  if (intervalTimer) {
-    clearInterval(intervalTimer);
+    // Execute entry action of the initial state
+    if (this.states[this.currentState].onEntry) {
+      this.states[this.currentState].onEntry();
+    }
   }
-  intervalTimer = undefined;
-  if (modes[current_mode] == "clock") {
-    drawClock();
-    intervalTimer = setInterval(() => updateClock(), 1000);
+
+  transition(toState) {
+    if (!this.states[toState]) {
+      throw new Error(`State "${toState}" does not exist`);
+    }
+
+    const current = this.states[this.currentState];
+    const next = this.states[toState];
+
+    // Execute exit action of the current state
+    if (current.onExit) {
+      current.onExit();
+    }
+
+    this.currentState = toState;
+
+    // Execute entry action of the next state
+    if (next.onEntry) {
+      next.onEntry();
+    }
   }
-  if (modes[current_mode] == "stopwatch") {
-    drawStopwatch();
+
+  getCurrentState() {
+    return this.currentState;
   }
 }
+
+// Function to iterate through states in sequence
+function createStateCycler(fsm, stateOrder) {
+  let currentIndex = stateOrder.indexOf(fsm.currentState);
+
+  return function cycleStates() {
+    // Determine the next index
+    currentIndex = (currentIndex + 1) % stateOrder.length;
+
+    // Transition to the next state
+    fsm.transition(stateOrder[currentIndex]);
+  };
+}
+
+// Modes
+const modes = {
+  clock: {
+    onEntry: () => {drawClock(); clockTimer = setInterval(() => updateClock(), 1000);},
+    onExit: () => clearInterval(clockTimer)
+  },
+  stopwatch: {
+    onEntry: () => {drawStopwatch(); stopwatchTimer = setInterval(() => updateStopwatch(), 50);},
+    onExit: () => clearInterval(stopwatchTimer)
+  }
+};
+
+// Stopwatch states
+const stopwatch_states = {
+  idle: {
+    onEntry: () => stopwatch_ticks = 0,
+    onExit: () => {}
+  },
+  running: {
+    onEntry: () => tickTimer = setInterval(() => stopwatch_ticks += 8, 80), // somehow we cant get faster
+    onExit: () => clearInterval(tickTimer)
+  },
+  paused: {
+    onEntry: () => {},
+    onExit: () => {}
+  }
+};
+
+const modes_fsm = new StateMachine(modes, "clock");
+const stopwatch_fsm = new StateMachine(stopwatch_states, "idle");
+
+// Create a state cycler
+const modeOrder = ["clock", "stopwatch"];
+const nextMode = createStateCycler(modes_fsm, modeOrder);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Events and Callbacks
@@ -385,10 +456,10 @@ function nextMode() {
 // Stop updates when LCD is off, restart when on
 Bangle.on('lcdPower',on=>{
   if (on) {
-    if (modes[current_mode] == "clock") {
+    if (modes_fsm.getCurrentState() == "clock") {
       drawClock();
     }
-    if (modes[current_mode] == "stopwatch") {
+    if (modes_fsm.getCurrentState() == "stopwatch") {
       drawStopwatch();
     }
   }
@@ -405,12 +476,11 @@ function onShortPressedBTN2() {
   if (setting("beep")) Bangle.beep(200, 4000);
 
   // Stopwatch mode
-  if (modes[current_mode] == "stopwatch") {
-    if (intervalTimer) {
-      clearInterval(intervalTimer);
-      intervalTimer = undefined;
+  if (modes_fsm.getCurrentState() == "stopwatch") {
+    if (stopwatch_fsm.getCurrentState() == "running") {
+      stopwatch_fsm.transition("paused");
     } else {
-      intervalTimer = setInterval(() => updateStopwatch(), 100);
+      stopwatch_fsm.transition("running");
     }
   }
 }
@@ -425,10 +495,9 @@ function onShortPressedBTN1() {
   if (setting("beep")) Bangle.beep(200, 4000);
 
   // Stopwatch mode
-  if (modes[current_mode] == "stopwatch") {
-    if (!intervalTimer) {
-      stopwatch_ticks = -10; // update will increment to 0
-      updateStopwatch();
+  if (modes_fsm.getCurrentState() == "stopwatch") {
+    if (stopwatch_fsm.getCurrentState() == "paused") {
+      stopwatch_fsm.transition("idle");
     }
   }
 }
@@ -443,10 +512,6 @@ function onShortPressedBTN3() {
   if (setting("beep")) Bangle.beep(200, 4000);
   nextMode();
 }
-
-
-// Buttons
-const LONG_PRESSED_TIME_MS = 750;
 
 let btnState = [{longPressTimer: null, isLongPress: false},{longPressTimer: null, isLongPress: false},{longPressTimer: null, isLongPress: false}];
 
@@ -495,4 +560,5 @@ setWatch(function (e) {
 setWatch(function (e) {
   handleFalling(2); // 2 = BTN3
 }, BTN3, { edge: "falling", repeat: true, debounce: 50 });
+
 
