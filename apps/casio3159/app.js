@@ -141,7 +141,7 @@ function setting(key) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 function alarmIsSet() {
-  return (storage.readJSON('alarm.json',1)||[]).some(alarm=>alarm.on);
+  return (storage.readJSON('sched.json',1)||[]).some(alarm=>alarm.on);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -484,74 +484,48 @@ Bangle.on('charging', charging => { if (charging) Bangle.buzz(); });
 ////////////////////////////////////////////////////////////////////////////////////////////
 const modes = [
   {
-    clock: {
-      defaultState: "running",
-      update: () => updateClock(),
-      callbacks: {
-        running: {
-          BTN1: {
-            short: () => {},
-            long: () => {}
-          },
-          BTN2: {
-            short: () => {},
-            long: () => Bangle.showLauncher()
-          },
-          BTN3: {
-            short: () => nextMode(),
-            long: () => {}
-          }
-        }
+    modeName: "clock",
+    defaultState: "running",
+    update: () => updateClock(),
+    callbacks: {
+      running: {
+        BTN1_short: () => {},
+        BTN1_long: () => {},
+        BTN2_short: () => {},
+        BTN2_long: () => Bangle.showLauncher(),
+        BTN3_short: () => nextMode(),
+        BTN3_long: () => {}
       }
     }
   },
   {
-    stopwatch: {
-      defaultState: "idle",
-      update: () => updateStopwatch(stopwatchTicks),
-      callbacks: {
-        idle: {
-          BTN2: {
-            short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
-            long: () => Bangle.showLauncher()
-          },
-          BTN1: {
-            short: () => {},
-            long: () => {}
-          },
-          BTN3: {
-            short: () => nextMode(),
-            long: () => {}
-          }
-        },
-        paused: {
-          BTN2: {
-            short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
-            long: () => Bangle.showLauncher()
-          },
-          BTN1: {
-            short: () => { stopwatchTicks = 0; currentModeState = "idle"; updateStopwatch(stopwatchTicks);},
-            long: () => {}
-          },
-          BTN3: {
-            short: () => nextMode(),
-            long: () => {}
-          }
-        },
-        running: {
-          BTN2: {
-            short: () => {currentModeState = "paused"; clearInterval(stopWatchTimer);},
-            long: () => Bangle.showLauncher()
-          },
-          BTN1: {
-            short: () => {},
-            long: () => {}
-          },
-          BTN3: {
-            short: () => nextMode(),
-            long: () => {}
-          }
-        }
+    modeName: "stopwatch",
+    defaultState: "idle",
+    update: () => updateStopwatch(stopwatchTicks),
+    callbacks: {
+      idle: {
+        BTN1_short: () => {},
+        BTN1_long: () => {},
+        BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
+        BTN2_long: () => Bangle.showLauncher(),
+        BTN3_short: () => nextMode(),
+        BTN3_long: () => {}
+      },
+      running: {
+        BTN1_short: () => {},
+        BTN1_long: () => {},
+        BTN2_short: () => {currentModeState = "paused"; clearInterval(stopWatchTimer);},
+        BTN2_long: () => Bangle.showLauncher(),
+        BTN3_short: () => nextMode(),
+        BTN3_long: () => {}
+      },
+      paused: {
+        BTN1_short: () => {stopwatchTicks = 0; currentModeState = "idle"; updateStopwatch(stopwatchTicks);},
+        BTN1_long: () => {},
+        BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
+        BTN2_long: () => Bangle.showLauncher(),
+        BTN3_short: () => nextMode(),
+        BTN3_long: () => {}
       }
     }
   }/*,
@@ -607,24 +581,24 @@ const modes = [
   }*/
 ];
 
-function getIndexByMode(mode) {
-  return modes.findIndex(m => Object.keys(m)[0] === mode);
+function getIndexByMode(modeName) {
+  return modes.findIndex(m => m.modeName === modeName);
 }
 
 function getModeByIndex(index) {
-  return Object.keys(modes[new_index])[0];
+  return modes[index].modeName;
 }
 
 function getDefaultState(mode) {
-  return modes.find(m => m[mode])[mode].defaultState;
+  return modes.find(m => m.modeName === mode).defaultState;
 }
 
 function getCallbacks(mode) {
-  return modes.find(m => m[mode])[mode].callbacks;
+  return modes.find(m => m.modeName === mode).callbacks;
 }
 
 function getUpdate(mode) {
-  return modes.find(m => m[mode])[mode].update;
+  return modes.find(m => m.modeName === mode).update;
 }
 
 var currentMode = "clock"; // initial mode
@@ -729,37 +703,37 @@ function alarm() {
 function onLongPressedBTN2() {
   console.debug("BTN2 long pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN2.long();
+  getCallbacks(currentMode)[currentModeState].BTN2_long();
 }
 
 function onShortPressedBTN2() {
   console.debug("BTN2 short pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN2.short();
+  getCallbacks(currentMode)[currentModeState].BTN2_short();
 }
 
 function onLongPressedBTN1() {
   console.debug("BTN1 long pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN1.long();
+  getCallbacks(currentMode)[currentModeState].BTN1_long();
 }
 
 function onShortPressedBTN1() {
   console.debug("BTN1 short pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN1.short();
+  getCallbacks(currentMode)[currentModeState].BTN1_short();
 }
 
 function onLongPressedBTN3() {
   console.debug("BTN3 long pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN3.long();
+  getCallbacks(currentMode)[currentModeState].BTN3_long();
 }
 
 function onShortPressedBTN3() {
   console.debug("BTN3 short pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN3.short();
+  getCallbacks(currentMode)[currentModeState].BTN3_short();
 }
 
 let btnState = [{longPressTimer: null, isLongPress: false},{longPressTimer: null, isLongPress: false},{longPressTimer: null, isLongPress: false}];
