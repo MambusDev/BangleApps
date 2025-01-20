@@ -503,7 +503,7 @@ const modes = [
     update: () => updateStopwatch(stopwatchTicks),
     callbacks: {
       idle: {
-        BTN1_short: () => {},
+        BTN1_short: () => {stopwatchTicks = 0; updateStopwatch(stopwatchTicks);},
         BTN1_long: () => {},
         BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
         BTN2_long: () => Bangle.showLauncher(),
@@ -646,9 +646,6 @@ function logSystemState() {
   console.log(`- Free: ${memory.free} bytes`);
 
   // Log current Flash usage
-  const ext_flash = require("Storage").getFree(false);
-  const int_flash = require("Storage").getFree(true);
-
   console.log(`Flash Usage:`);
   logFlashStats();
 
