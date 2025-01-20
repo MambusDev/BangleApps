@@ -509,7 +509,7 @@ const modes = [
         BTN1_long: () => {},
         BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
         BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
+        BTN3_short: () => {clearInterval(stopWatchTimer); nextMode();},
         BTN3_long: () => {}
       },
       running: {
@@ -517,7 +517,7 @@ const modes = [
         BTN1_long: () => {},
         BTN2_short: () => {currentModeState = "paused"; clearInterval(stopWatchTimer);},
         BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
+        BTN3_short: () => {clearInterval(stopWatchTimer); nextMode();},
         BTN3_long: () => {}
       },
       paused: {
@@ -525,7 +525,7 @@ const modes = [
         BTN1_long: () => {},
         BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
         BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
+        BTN3_short: () => {clearInterval(stopWatchTimer); nextMode();},
         BTN3_long: () => {}
       }
     }
