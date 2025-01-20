@@ -454,6 +454,7 @@ function updateStopwatch(elapsedTenMilliseconds) {
 function updateTimer(timeLeft) {
   var seconds = (timeLeft % 60).toString().padStart(2, '0');
   var minutes = (Math.floor(timeLeft / 60) % 60).toString().padStart(2, '0');
+  var time = getTimeStrings();
 
   renderedWatchState.dividers.colon = true;
   renderedWatchState.dividers.dot = false;
@@ -461,7 +462,7 @@ function updateTimer(timeLeft) {
   renderedWatchState.middleDigits.value = seconds;
   renderedWatchState.upperDigits.value = minutes;
   renderedWatchState.textField.text = "TR";
-  renderedWatchState.textBox.text = "";
+  renderedWatchState.textBox.text = time.hours + ":" + time.minutes;
 }
 
 // General system updates
@@ -535,7 +536,7 @@ const modes = [
     update: () => updateTimer(timerValue),
     callbacks: {
       idle: {
-        BTN1_short: () => {},
+        BTN1_short: () => {timerValue = timerStartValue; updateTimer(timerValue);},
         BTN1_long: () => {currentModeState = "chg_minutes"; renderedWatchState.upperDigits.highlighted = true; renderedWatchState.middleDigits.highlighted = false;},
         BTN2_short: () => {currentModeState = "running";},
         BTN2_long: () => Bangle.showLauncher(),
