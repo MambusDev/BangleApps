@@ -6,7 +6,7 @@
     "icon": "app.png",
     "tags": "clock",
     "type": "clock",
-    "dependencies" : { "settings":"type", "alarm":"app" },
+    "dependencies" : { "setting":"app", "alarm":"app" },
     "screenshots": [{"url":"screenshot.png"}],
     "supports": ["BANGLEJS"],
     "allow_emulator": true,
