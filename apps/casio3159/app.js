@@ -18,13 +18,31 @@ const battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.
 
 const storage = require('Storage');
 const SETTINGS_FILE = 'setting.json';
-const language = "German";
+
+// Language setting
+const Language = {
+    ENGLISH: "English",
+    GERMAN: "German"
+};
+
+const language = Language.GERMAN;
 
 // Button timing
 const LONG_PRESSED_TIME_MS = 750;
 // Button sounds
 const BTN_BEEP_TIME_MS = 80;
 const BTN_BEEP_FREQ_HZ = 6000;
+
+// Alarm sounds
+const ALARM_BUZZ_COUNT = 3;
+const ALARM_BUZZ_TIME_MS = 250;
+const ALARM_BUZZ_PAUSE_MS = 1000;
+const ALARM_BEEP_FREQ_HZ = 4000;
+
+// Battery
+const BATTERY_HIGH = 2;
+const BATTERY_MEDIUM = 1;
+const BATTERY_LOW = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Icon images (converted with https://www.espruino.com/Image+Converter)
@@ -38,6 +56,10 @@ const beep_icon = E.toArrayBuffer(atob("HDCBAf/+f///4////j///+P///4f///h///+D///
 const bt_icon = E.toArrayBuffer(atob("MDCBAf//////////+///////+f//////+P//////+H//////+D//////+B//////+Af/////+AP/////+AH/////+ED/////+GB/////+HA////x+HgP///w+Hwf///weHg////4OHB////8GGD////+CEH/////AAP/////gAf/////wA//////4B//////8D//////8D//////4B//////wA//////gAf/////AAP////+CEH////8GGD////4OHB////weHg////g+Hwf///x+Hgf///7+HA/////+GB/////+ED/////+AH/////+AP/////+Af/////+B//////+D//////+H//////+P//////+f//////+////////////w=="));
 
 const bt_con_icon = E.toArrayBuffer(atob("MDCBAf//////////+///////+f//////+P//////+H//////+D//////+B//////+Af/////+AP/////+AH/////+ED/////+GB/////+HA////x+HgP///w+Hwf///weHg////4OHB////8GGD////+CEH/////AAP/////gAf///7/wA//f/x/4B/+P/g/8D/8H/Af8D/4D/g/4B/8H/x/wA/+P/7/gAf/f///AAP////+CEH////8GGD////4OHB////weHg////g+Hwf///x+Hgf///7+HA/////+GB/////+ED/////+AH/////+AP/////+Af/////+B//////+D//////+H//////+P//////+f//////+////////////w=="));
+
+
+const charging_icon = 
+E.toArrayBuffer(atob("MDCBAf//////////////////////////////////4Af/////wAP/////wAP/////wAP////8AAA////4AAAf///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAQAP///wAQAP///wAwAP///wAwAP///wBwAP///wBwAP///wDwAP///wD/wP///wH/gP///wH/gP///wP/AP///wAPAP///wAOAP///wAOAP///wAMAP///wAMAP///wAIAP///wAIAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///4AAAf///8AAA//////////////////////////////////w=="));
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +81,7 @@ function getTimeStrings() {
   // Convert weekday to a two-character string
   let weekdays_english = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
   let weekdays_german = ["SO", "MO", "DI", "MI", "DO", "FR", "SA"];
-  
+
   if (language == "German") {
     weekday = weekdays_german[weekday];
   } else {
@@ -73,7 +95,7 @@ function getTimeStrings() {
   console.info("Day of Month: " + day);
   console.info("Month: " + month);
   console.info("Weekday: " + weekday);
-  
+
   return {hours: hours, minutes: minutes, seconds: seconds, day: day, month: month, weekday: weekday};
 }
 
@@ -82,11 +104,11 @@ function getBatteryLevel() {
   console.info("Battery: " + battery.toString());
 
   if (battery <= 33) {
-    battery = 0;
+    battery = BATTERY_LOW;
   } else if (battery <= 66) {
-    battery = 1;
+    battery = BATTERY_MEDIUM;
   } else {
-    battery = 2;
+    battery = BATTERY_HIGH;
   }
 
   return battery;
@@ -107,7 +129,8 @@ function setting(key) {
   //define default settings
   const DEFAULTS = {
     'ble' : false,
-    'beep' : false
+    'beep' : false,
+    'quiet': 0
   };
   if (!settings) { loadSettings(); }
   return (key in settings) ? settings[key] : DEFAULTS[key];
@@ -125,7 +148,7 @@ function alarmIsSet() {
 // Drawing functions
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-function drawTimeDot() {
+function drawDot() {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("7x11Numeric7Seg", 3);
@@ -133,23 +156,23 @@ function drawTimeDot() {
   g.drawString(".", xmax - margin.right - 42, ymax - margin.bottom - 2.5 * ymax / 10, true);
 }
 
-function drawSeconds(seconds) {
+function drawLowerDigits(digits) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("7x11Numeric7Seg", 3);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
-  g.drawString(seconds, xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
+  g.drawString(digits, xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
 }
 
-function drawHours(hours) {
+function drawUpperDigits(digits) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
-  g.drawString(hours, xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, true);
+  g.drawString(digits, xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, true);
 }
 
-function drawTimeColon() {
+function drawColon() {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("7x11Numeric7Seg", 5);
@@ -157,18 +180,12 @@ function drawTimeColon() {
   g.drawString(":", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
 }
 
-function drawMinutes(minutes) {
+function drawMiddleDigits(digits) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
-  g.drawString(minutes, xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, true); // 105 = three times font width
-}
-
-function drawTime(hours, minutes) {
-  drawHours(hours);
-  drawTimeColon();
-  drawMinutes(minutes);
+  g.drawString(digits, xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, true); // 105 = three times font width
 }
 
 function drawBatteryLevels() {
@@ -201,11 +218,11 @@ function drawStaticElements() {
   // Top right box
   g.drawRect(center.x, ymin + margin.top, xmax - margin.right, ymin + ymax / 4 + margin.top);
   g.drawRect(center.x + 1, ymin + margin.top + 1, xmax - margin.right - 1, ymin + ymax / 4 + margin.top - 1); // Line width 2
-  
+
   // Horizontal bottom line
   g.drawLine(xmin + margin.left, ymax - ymax / 10, xmax - margin.right, ymax - ymax / 10);
   g.drawLine(xmin + margin.left, ymax - ymax / 10 + 1, xmax - margin.right, ymax - ymax / 10 + 1); // Line width 2
-  
+
   // Vertical bottom line
   g.drawLine(center.x, ymax - ymax / 10, center.x, ymax - margin.bottom);
   g.drawLine(center.x - 1, ymax - ymax / 10, center.x - 1, ymax - margin.bottom); // Line width 2
@@ -213,7 +230,7 @@ function drawStaticElements() {
   drawBatteryLevels();
 }
 
-function drawTopLeftText(text) {
+function drawTextField(text) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("Teletext5x9Ascii", 5);
@@ -221,20 +238,12 @@ function drawTopLeftText(text) {
   g.drawString(text, center.x - margin.right, ymin + 1.5 * margin.top, true);
 }
 
-function drawTopRightText(text) {
+function drawTextBox(text) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("8x12", 4);
   g.setFontAlign(1, -1, 0); // right, top, normal
   g.drawString(text, xmax - 1.5 * margin.right, ymin + 1.25 * margin.top, true);
-}
-
-function drawDate(day, month) {
-  drawTopRightText(day + "." + month.padStart(2, ' '));
-}
-
-function drawWeekday(weekday) {
-  drawTopLeftText(weekday);
 }
 
 function clearBatteryStatus() {
@@ -263,14 +272,12 @@ function drawBatteryStatus(battery) {
   drawBatteryBar(battery);
 }
 
-function drawBtStatus() {
+function drawBtStatus(bt_enabled, bt_connected) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0,0,0); // Black
 
-  if (setting("ble")) {
-    console.info("Bluetooth enabled");
-    if (NRF.getSecurityStatus().connected) {
-      console.info("Bluetooth connected");
+  if (bt_enabled) {
+    if (bt_connected) {
       g.drawImage(bt_con_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
     } else {
       g.drawImage(bt_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
@@ -285,23 +292,38 @@ function drawBtStatus() {
   }
 }
 
-function drawBeepStatus() {
+function drawBeepStatus(muted) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0,0,0); // Black
 
-  if (setting("beep") != false) {
-    console.info("Beep enabled");
+  if (!muted) {
     g.drawImage(beep_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
   } else {
     g.drawImage(mute_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
   }
 }
 
-function drawAlarmStatus() {
+function drawChargingStatus(charging) {
   g.setColor(0,0,0); // Black
   g.setBgColor(0,0,0); // Black
 
-  if (alarmIsSet()) {
+  if (charging) {
+    g.drawImage(charging_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top + 24, {scale:0.4});
+  } else {
+    g.setColor(0.9,1,0.9); // Green-Gray
+    x1 = xmin + margin.left + 24;
+    y1 = ymin + 1.5 * margin.top + 24;
+    x2 = x1 + 48 * 0.4; // Icon size = 48x48
+    y2 = y1 + 48 * 0.4; // Icon size = 48x48
+    g.fillRect(x1, y1, x2, y2);
+  }
+}
+
+function drawAlarmStatus(alarm) {
+  g.setColor(0,0,0); // Black
+  g.setBgColor(0,0,0); // Black
+
+  if (alarm) {
     console.info("Alarm set");
     g.drawImage(bell_icon, xmin + margin.left, ymin + 1.5 * margin.top + 24, {scale:0.4});
   } else {
@@ -314,237 +336,430 @@ function drawAlarmStatus() {
   }
 }
 
-function drawClock() {
-  var time = getTimeStrings();
-  var battery = getBatteryLevel(); 
+/*
 
-  drawStaticElements();
+function setCountdownValues() {
+  var seconds = (countdownValue % 60).toString().padStart(2, '0');
+  var minutes = (Math.floor(countdownValue / 60) % 60).toString().padStart(2, '0');
 
-  drawSeconds(time.seconds);
-  drawTime(time.hours, time.minutes);
-  drawWeekday(time.weekday);
-  drawDate(time.day, time.month);
-  drawBatteryStatus(battery);
-  drawBtStatus();
-  drawBeepStatus();
-  drawAlarmStatus();
+  renderedWatchState.textField.text = "CT";
+  // ...
 }
 
+function updateCountdownValues() {
+  var seconds = (countdownValue % 60).toString().padStart(2, '0');
+  var minutes = (Math.floor(countdownValue / 60) % 60).toString().padStart(2, '0');
+
+  renderedWatchState.upperDigits.value = minutes;
+  renderedWatchState.middleDigits.value = seconds;
+}
+
+*/
+
+function renderUi(watchState) {
+  drawStaticElements();
+  drawBatteryStatus(watchState.battery);
+}
+
+function renderSlowContents(watchState) {
+  drawMiddleDigits(watchState.middleDigits.value);
+  drawUpperDigits(watchState.upperDigits.value);
+  drawTextField(watchState.textField.text);
+  drawTextBox(watchState.textBox.text);
+  drawBtStatus(watchState.bluetooth.enabled, watchState.bluetooth.connected);
+  drawBeepStatus(watchState.muted);
+  drawAlarmStatus(watchState.alarm);
+  drawChargingStatus(watchState.charging);
+  if (watchState.dividers.dot) drawDot();
+  if (watchState.dividers.colon) drawColon();
+}
+
+function renderFastContents(watchState) {
+  drawLowerDigits(watchState.lowerDigits.value); // used for milliseconds
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Contents to be rendered
+////////////////////////////////////////////////////////////////////////////////////////////
+
+// State to be rendered
+var renderedWatchState = {
+  dividers: {
+    colon: true,
+    dot: false
+  },
+  upperDigits: {
+    value: "00",
+    highlighted: false
+  },
+  middleDigits: {
+    value: "00",
+    highlighted: false
+  },
+  lowerDigits: {
+    value: "00",
+    highlighted: false
+  },
+  textField: {
+    text: "SO",
+    highlighted: false
+  },
+  textBox: {
+    text: " 1. 1",
+    highlighted: false
+  },
+  bluetooth: {
+    enabled: false,
+    connected: false
+  },
+  charging: false,
+  muted: false,
+  alarm: false,
+  battery: BATTERY_HIGH
+};
+
+// Update for clock mode
 function updateClock() {
   var time = getTimeStrings();
-  var battery = getBatteryLevel();
 
-  drawSeconds(time.seconds);
-  drawTime(time.hours, time.minutes);
-  drawWeekday(time.weekday);
-  drawDate(time.day, time.month);
-  drawBtStatus();
-  drawBeepStatus();
-  drawAlarmStatus();
+  renderedWatchState.dividers.colon = true;
+  renderedWatchState.dividers.dot = false;
+  renderedWatchState.upperDigits.value = time.hours;
+  renderedWatchState.middleDigits.value = time.minutes;
+  renderedWatchState.lowerDigits.value = time.seconds;
+  renderedWatchState.textField.text = time.weekday;
+  renderedWatchState.textBox.text = time.day + "." + time.month.padStart(2, ' ');
 }
 
-function drawStopwatch() {
-  var battery = getBatteryLevel();
+// Update for stopwatch mode
+function updateStopwatch(elapsedTenMilliseconds) {
+  var tenmilliseconds = (elapsedTenMilliseconds % 100).toString().padStart(2, '0');
+  var seconds = (Math.floor(elapsedTenMilliseconds / 100) % 60).toString().padStart(2, '0');
+  var minutes = (Math.floor(elapsedTenMilliseconds / 6000) % 60).toString().padStart(2, '0');
+  var hours = (Math.floor(elapsedTenMilliseconds / 360000) % 24).toString(); // Not padded on purpose
 
-  var tenmilliseconds = (stopwatch_ticks % 100).toString().padStart(2, '0');
-  var seconds = (Math.floor(stopwatch_ticks / 100) % 60).toString().padStart(2, '0');
-  var minutes = (Math.floor(stopwatch_ticks / 6000) % 60).toString().padStart(2, '0');
-  var hours = (Math.floor(stopwatch_ticks / 360000) % 24).toString(); // Not padded on purpose
-
-  drawStaticElements();
-  drawTopLeftText("ST"); // Also static here
-  drawTimeDot();
-
-  drawSeconds(tenmilliseconds);
-  drawTime(minutes, seconds);
-  drawTopRightText(hours + "H");
-  drawBatteryStatus(battery);
-  drawBtStatus();
-  drawBeepStatus();
-  drawAlarmStatus();
+  renderedWatchState.dividers.colon = true;
+  renderedWatchState.dividers.dot = true;
+  renderedWatchState.lowerDigits.value = tenmilliseconds;
+  renderedWatchState.middleDigits.value = seconds;
+  renderedWatchState.upperDigits.value = minutes;
+  renderedWatchState.textField.text = "ST";
+  renderedWatchState.textBox.text = hours + "H";
 }
 
-function updateStopwatch() {
-  var tenmilliseconds = (stopwatch_ticks % 100).toString().padStart(2, '0');
-  var seconds = (Math.floor(stopwatch_ticks / 100) % 60).toString().padStart(2, '0');
-  var minutes = (Math.floor(stopwatch_ticks / 6000) % 60).toString().padStart(2, '0');
-  var hours = (Math.floor(stopwatch_ticks / 360000) % 24).toString(); // Not padded on purpose
+/*
+// Update for timer mode
+function updateTimer(timeLeft) {
+  var seconds = (timeLeft % 60).toString().padStart(2, '0');
+  var minutes = (Math.floor(timeLeft / 60) % 60).toString().padStart(2, '0');
 
-  drawSeconds(tenmilliseconds);
-  drawTime(minutes, seconds);
-  drawTopRightText(hours + "H");
+  renderedWatchState.dividers.colon = true;
+  renderedWatchState.dividers.dot = false;
+  renderedWatchState.lowerDigits.value = "";
+  renderedWatchState.middleDigits.value = seconds;
+  renderedWatchState.upperDigits.value = minutes;
+  renderedWatchState.textField.text = "TR";
+  renderedWatchState.textBox.text = "";
 }
+*/
+
+// General system updates
+function updateSystemStatus() {
+  renderedWatchState.battery = getBatteryLevel();
+  renderedWatchState.muted = !setting("beep");
+  renderedWatchState.bluetooth.enabled = setting("ble");
+  if (renderedWatchState.bluetooth.enabled) {
+    renderedWatchState.bluetooth.connected = NRF.getSecurityStatus().connected;
+  }
+  renderedWatchState.alarm = alarmIsSet();
+  renderedWatchState.charging = Bangle.isCharging();
+}
+
+// Buzz on charging event
+Bangle.on('charging', charging => { if (charging) Bangle.buzz(); });
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// Globals
+// Modes
 ////////////////////////////////////////////////////////////////////////////////////////////
-var stopwatch_ticks = 0; // ticks of 10 ms
-var clockTimer;
-var stopwatchTimer;
-var tickTimer;
+const modes = [
+  {
+    clock: {
+      defaultState: "running",
+      update: () => updateClock(),
+      callbacks: {
+        running: {
+          BTN1: {
+            short: () => {},
+            long: () => {}
+          },
+          BTN2: {
+            short: () => {},
+            long: () => Bangle.showLauncher()
+          },
+          BTN3: {
+            short: () => nextMode(),
+            long: () => {}
+          }
+        }
+      }
+    }
+  },
+  {
+    stopwatch: {
+      defaultState: "idle",
+      update: () => updateStopwatch(stopwatchTicks),
+      callbacks: {
+        idle: {
+          BTN2: {
+            short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
+            long: () => Bangle.showLauncher()
+          },
+          BTN1: {
+            short: () => {},
+            long: () => {}
+          },
+          BTN3: {
+            short: () => nextMode(),
+            long: () => {}
+          }
+        },
+        paused: {
+          BTN2: {
+            short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
+            long: () => Bangle.showLauncher()
+          },
+          BTN1: {
+            short: () => { stopwatchTicks = 0; currentModeState = "idle"; updateStopwatch(stopwatchTicks);},
+            long: () => {}
+          },
+          BTN3: {
+            short: () => nextMode(),
+            long: () => {}
+          }
+        },
+        running: {
+          BTN2: {
+            short: () => {currentModeState = "paused"; clearInterval(stopWatchTimer);},
+            long: () => Bangle.showLauncher()
+          },
+          BTN1: {
+            short: () => {},
+            long: () => {}
+          },
+          BTN3: {
+            short: () => nextMode(),
+            long: () => {}
+          }
+        }
+      }
+    }
+  }/*,
+  {
+    timer: {
+      defaultState: "idle",
+      update: () => updateTimer(timerValue),
+      callbacks: {
+        idle: {
+          BTN2: {
+            short: () => {currentModeState = "running"; timerTimer = setInterval(() => { timerValue-=1; updateTimer(timerValue);}, 1000);},
+            long: () => Bangle.showLauncher()
+          },
+          BTN1: {
+            short: () => {},
+            long: () => {}
+          },
+          BTN3: {
+            short: () => nextMode(),
+            long: () => {}
+          }
+        },
+        paused: {
+          BTN2: {
+            short: () => {currentModeState = "running"; timerTimer = setInterval(() => { timerValue-=1; updateTimer(timerValue);}, 1000);},
+            long: () => Bangle.showLauncher()
+          },
+          BTN1: {
+            short: () => { timerValue = timerStartValue; currentModeState = "idle"; updateTimer(timerValue);},
+            long: () => {}
+          },
+          BTN3: {
+            short: () => nextMode(),
+            long: () => {}
+          }
+        },
+        running: {
+          BTN2: {
+            short: () => {currentModeState = "paused"; clearInterval(timerTimer);},
+            long: () => Bangle.showLauncher()
+          },
+          BTN1: {
+            short: () => {},
+            long: () => {}
+          },
+          BTN3: {
+            short: () => nextMode(),
+            long: () => {}
+          }
+        }
+      }
+    }
+  }*/
+];
+
+function getIndexByMode(mode) {
+  return modes.findIndex(m => Object.keys(m)[0] === mode);
+}
+
+function getModeByIndex(index) {
+  return Object.keys(modes[new_index])[0];
+}
+
+function getDefaultState(mode) {
+  return modes.find(m => m[mode])[mode].defaultState;
+}
+
+function getCallbacks(mode) {
+  return modes.find(m => m[mode])[mode].callbacks;
+}
+
+function getUpdate(mode) {
+  return modes.find(m => m[mode])[mode].update;
+}
+
+var currentMode = "clock"; // initial mode
+var currentModeState = getDefaultState(currentMode); // initial state of initial mode
+
+function nextMode() {
+  index = getIndexByMode(currentMode);
+  new_index = (index + 1) % modes.length;
+
+  currentMode = getModeByIndex(new_index);
+  currentModeState = getDefaultState(currentMode);
+
+  // Immediate update and render
+  updateSystemStatus();
+  getUpdate(currentMode)();
+  renderUi(renderedWatchState);
+  renderSlowContents(renderedWatchState);
+  renderFastContents(renderedWatchState);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // App script
 ////////////////////////////////////////////////////////////////////////////////////////////
 console.info("Booting...");
+console.info("Free memory: " + require("Storage").getFree().toString());
 // Reset the state of the graphics library
 g.reset();
 // Clear the screen once, at startup
 g.clear();
+// Initial rendering
+updateSystemStatus();
+getUpdate(currentMode)();
+renderUi(renderedWatchState);
+renderSlowContents(renderedWatchState);
+renderFastContents(renderedWatchState);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// Modes and states
+// Rendering intervals
 ////////////////////////////////////////////////////////////////////////////////////////////
-class StateMachine {
-  constructor(states, initialState) {
-    if (!states[initialState]) {
-      throw new Error("Initial state must be a valid state");
-    }
-    this.states = states;
-    this.currentState = initialState;
 
-    // Execute entry action of the initial state
-    if (this.states[this.currentState].onEntry) {
-      this.states[this.currentState].onEntry();
-    }
+setInterval(() => renderFastContents(renderedWatchState), 250);
+setInterval(() => {if (currentMode == "clock") updateClock(); updateSystemStatus(); renderSlowContents(renderedWatchState);}, 500);
+
+// Stop updates when LCD is off, restart when on
+Bangle.on('lcdPower',on =>{
+  if (on) {
+    updateSystemStatus();
+    getUpdate(currentMode);
+    renderUi(renderedWatchState);
+    renderSlowContents(renderedWatchState);
+    renderFastContents(renderedWatchState);
   }
+});
 
-  transition(toState) {
-    if (!this.states[toState]) {
-      throw new Error(`State "${toState}" does not exist`);
-    }
+////////////////////////////////////////////////////////////////////////////////////////////
+// Handle stopwatch
+////////////////////////////////////////////////////////////////////////////////////////////
+var stopwatchTimer;
+var stopwatchTicks = 0; // 10 ms per tick
 
-    const current = this.states[this.currentState];
-    const next = this.states[toState];
 
-    // Execute exit action of the current state
-    if (current.onExit) {
-      current.onExit();
-    }
+////////////////////////////////////////////////////////////////////////////////////////////
+// Countdown timer utilities
+//////////////////////////////////////////////////////////////////////////////////////////// 
+/*
+var timerTimer;
+var timerStartValue = 120; // in Seconds
+var timerValue = timerStartValue; // in Seconds
+*/
 
-    this.currentState = toState;
-
-    // Execute entry action of the next state
-    if (next.onEntry) {
-      next.onEntry();
-    }
-  }
-
-  getCurrentState() {
-    return this.currentState;
+/*
+function evaluateCountdowntimer() {
+  if (countdownValue == 0) {
+    console.info("Timer expired!");
+    countdown_fsm.transition("beeping");
   }
 }
 
-// Function to iterate through states in sequence
-function createStateCycler(fsm, stateOrder) {
-  let currentIndex = stateOrder.indexOf(fsm.currentState);
-
-  return function cycleStates() {
-    // Determine the next index
-    currentIndex = (currentIndex + 1) % stateOrder.length;
-
-    // Transition to the next state
-    fsm.transition(stateOrder[currentIndex]);
-  };
+function alarm() {
+  var buzzCount = ALARM_BUZZ_COUNT;
+  function buzz() {
+    if (setting('quiet')>1) return; // total silence, not even buzzing
+    Bangle.buzz(ALARM_BUZZ_TIME_MS).then(()=>{
+      setTimeout(()=>{
+        Bangle.beep(ALARM_BUZZ_TIME_MS, ALARM_BEEP_FREQ_HZ);
+        Bangle.buzz(ALARM_BUZZ_TIME_MS).then(function() {
+          if (buzzCount--) setTimeout(buzz, ALARM_BUZZ_PAUSE_MS);
+        });
+      },100);
+    });
+  }
+  buzz();
+  countdown_fsm.transistion("idle");
 }
-
-// Modes
-const modes = {
-  clock: {
-    onEntry: () => {drawClock(); clockTimer = setInterval(() => updateClock(), 1000);},
-    onExit: () => clearInterval(clockTimer)
-  },
-  stopwatch: {
-    onEntry: () => {drawStopwatch(); stopwatchTimer = setInterval(() => updateStopwatch(), 50);},
-    onExit: () => clearInterval(stopwatchTimer)
-  }
-};
-
-// Stopwatch states
-const stopwatch_states = {
-  idle: {
-    onEntry: () => stopwatch_ticks = 0,
-    onExit: () => {}
-  },
-  running: {
-    onEntry: () => tickTimer = setInterval(() => stopwatch_ticks += 8, 80), // somehow we cant get faster
-    onExit: () => clearInterval(tickTimer)
-  },
-  paused: {
-    onEntry: () => {},
-    onExit: () => {}
-  }
-};
-
-const modes_fsm = new StateMachine(modes, "clock");
-const stopwatch_fsm = new StateMachine(stopwatch_states, "idle");
-
-// Create a state cycler (modes are switched in the same order each time)
-const modeOrder = ["clock", "stopwatch"];
-const nextMode = createStateCycler(modes_fsm, modeOrder);
+*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Events and Callbacks
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-// Stop updates when LCD is off, restart when on
-Bangle.on('lcdPower',on=>{
-  if (on) {
-    if (modes_fsm.getCurrentState() == "clock") {
-      drawClock();
-    }
-    if (modes_fsm.getCurrentState() == "stopwatch") {
-      drawStopwatch();
-    }
-  }
-});
-
 // Handle button presses
 function onLongPressedBTN2() {
   console.debug("BTN2 long pressed");
-  Bangle.showLauncher();
+  if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
+  getCallbacks(currentMode)[currentModeState].BTN2.long();
 }
 
 function onShortPressedBTN2() {
   console.debug("BTN2 short pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-
-  // Stopwatch mode
-  if (modes_fsm.getCurrentState() == "stopwatch") {
-    if (stopwatch_fsm.getCurrentState() == "running") {
-      stopwatch_fsm.transition("paused");
-    } else {
-      stopwatch_fsm.transition("running");
-    }
-  }
+  getCallbacks(currentMode)[currentModeState].BTN2.short();
 }
 
 function onLongPressedBTN1() {
   console.debug("BTN1 long pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
+  getCallbacks(currentMode)[currentModeState].BTN1.long();
 }
 
 function onShortPressedBTN1() {
   console.debug("BTN1 short pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-
-  // Stopwatch mode
-  if (modes_fsm.getCurrentState() == "stopwatch") {
-    if (stopwatch_fsm.getCurrentState() == "paused") {
-      stopwatch_fsm.transition("idle");
-    }
-  }
+  getCallbacks(currentMode)[currentModeState].BTN1.short();
 }
 
 function onLongPressedBTN3() {
   console.debug("BTN3 long pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
+  getCallbacks(currentMode)[currentModeState].BTN3.long();
 }
 
 function onShortPressedBTN3() {
   console.debug("BTN3 short pressed");
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  nextMode();
+  getCallbacks(currentMode)[currentModeState].BTN3.short();
 }
 
 let btnState = [{longPressTimer: null, isLongPress: false},{longPressTimer: null, isLongPress: false},{longPressTimer: null, isLongPress: false}];
@@ -552,6 +767,7 @@ let btnState = [{longPressTimer: null, isLongPress: false},{longPressTimer: null
 let btnCallback = [{short: onShortPressedBTN1, long: onLongPressedBTN1},{short: onShortPressedBTN2, long: onLongPressedBTN2},{short: onShortPressedBTN3, long: onLongPressedBTN3}];
 
 function handleRising(btn) {
+  btnCallback[btn].short(); // Trigger short press action immediately
   btnState[btn].isLongPress = false; // Reset long press state
   btnState[btn].longPressTimer = setTimeout(() => {
     btnState[btn].isLongPress = true; // Mark as long press
@@ -563,10 +779,6 @@ function handleFalling(btn) {
   if (btnState[btn].longPressTimer) {
     clearTimeout(btnState[btn].longPressTimer); // Cancel the long press timer
     btnState[btn].longPressTimer = null;
-  }
-
-  if (!btnState[btn].isLongPress) {
-    btnCallback[btn].short(); // Trigger short press action
   }
 }
 
@@ -594,5 +806,3 @@ setWatch(function (e) {
 setWatch(function (e) {
   handleFalling(2); // 2 = BTN3
 }, BTN3, { edge: "falling", repeat: true, debounce: 50 });
-
-
