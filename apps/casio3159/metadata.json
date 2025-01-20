@@ -1,0 +1,16 @@
+   {
+    "id": "casio3159",
+    "name": "Casio 3159",
+    "version": "0.01",
+    "description": "Casio 3159 inspired clock",
+    "icon": "app.png",
+    "tags": "clock",
+    "type": "clock",
+    "screenshots": [{"url":"screenshot.png"}],
+    "supports": ["BANGLEJS"],
+    "allow_emulator": true,
+    "storage": [
+      {"name":"casio.app.js","url":"app.js"},
+      {"name":"casio.img","url":"app-icon.js","evaluate":true}
+    ]
+  }
