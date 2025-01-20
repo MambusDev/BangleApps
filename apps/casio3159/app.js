@@ -47,6 +47,9 @@ const BATTERY_LOW = 0;
 // Memory logging
 const LOGGING_ENABLED = false;
 
+// Interval of main timer
+const MAIN_INTERVAL_MS = 250;
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Icon images (converted with https://www.espruino.com/Image+Converter)
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,50 +66,6 @@ const bt_con_icon = E.toArrayBuffer(atob("MDCBAf//////////+///////+f//////+P////
 
 const charging_icon = 
 E.toArrayBuffer(atob("MDCBAf//////////////////////////////////4Af/////wAP/////wAP/////wAP////8AAA////4AAAf///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAQAP///wAQAP///wAwAP///wAwAP///wBwAP///wBwAP///wDwAP///wD/wP///wH/gP///wH/gP///wP/AP///wAPAP///wAOAP///wAOAP///wAMAP///wAMAP///wAIAP///wAIAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///4AAAf///8AAA//////////////////////////////////w=="));
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// System parameter getters
-////////////////////////////////////////////////////////////////////////////////////////////
-
-function getTimeStrings() {
-  // Get the current date and time
-  let now = new Date();
-
-  // Extract parts of the date and time
-  let hours = now.getHours().toString().padStart(2, '0'); // Hours (0-23)
-  let minutes = now.getMinutes().toString().padStart(2, '0'); // Minutes (0-59)
-  let seconds = now.getSeconds().toString().padStart(2, '0'); // Seconds (0-59)
-  let day = now.getDate().toString(); // Day of the month (1-31)
-  let month = (now.getMonth() + 1).toString(); // Month (1-12)
-  var weekday = now.getDay(); // Weekday (0-6, Sunday = 0)
-
-  // Convert weekday to a two-character string
-  let weekdays_english = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
-  let weekdays_german = ["SO", "MO", "DI", "MI", "DO", "FR", "SA"];
-
-  if (language == "German") {
-    weekday = weekdays_german[weekday];
-  } else {
-    weekday = weekdays_english[weekday];
-  }
-
-  return {hours: hours, minutes: minutes, seconds: seconds, day: day, month: month, weekday: weekday};
-}
-
-function getBatteryLevel() {
-  var battery = E.getBattery();
-
-  if (battery <= 33) {
-    battery = BATTERY_LOW;
-  } else if (battery <= 66) {
-    battery = BATTERY_MEDIUM;
-  } else {
-    battery = BATTERY_HIGH;
-  }
-
-  return battery;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Read settings
@@ -131,8 +90,47 @@ function setting(key) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// Read alarms
+// System parameter getters
 ////////////////////////////////////////////////////////////////////////////////////////////
+
+function getTimeStrings() {
+  // Get the current date and time
+  let now = new Date();
+
+  // Extract parts of the date and time
+  let hours = now.getHours().toString().padStart(2, '0'); // Hours (0-23)
+  let minutes = now.getMinutes().toString().padStart(2, '0'); // Minutes (0-59)
+  let seconds = now.getSeconds().toString().padStart(2, '0'); // Seconds (0-59)
+  let day = now.getDate().toString(); // Day of the month (1-31)
+  let month = (now.getMonth() + 1).toString(); // Month (1-12)
+  let weekday = now.getDay(); // Weekday (0-6, Sunday = 0)
+
+  // Convert weekday to a two-character string
+  let weekdays_english = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+  let weekdays_german = ["SO", "MO", "DI", "MI", "DO", "FR", "SA"];
+
+  if (language == "German") {
+    weekday = weekdays_german[weekday];
+  } else {
+    weekday = weekdays_english[weekday];
+  }
+
+  return {hours: hours, minutes: minutes, seconds: seconds, day: day, month: month, weekday: weekday};
+}
+
+function getBatteryLevel() {
+  let battery = E.getBattery();
+
+  if (battery <= 33) {
+    battery = BATTERY_LOW;
+  } else if (battery <= 66) {
+    battery = BATTERY_MEDIUM;
+  } else {
+    battery = BATTERY_HIGH;
+  }
+
+  return battery;
+}
 
 function alarmIsSet() {
   return (storage.readJSON('sched.json',1)||[]).some(alarm=>alarm.on);
@@ -241,12 +239,12 @@ function drawTextBox(text) {
 }
 
 function clearBatteryStatus() {
-  var battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
- 
+  let battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
+
   g.setColor(0.9,1,0.9); // Green-Gray
-  
+
   for (let battery = 0; battery <= 2; battery++) {
-    var battery_bar = {x1: battery_status.x + battery * battery_status.width / 3, y1: ymax - ymax / 10 + 2 * margin.bottom, x2: battery_status.x + (battery + 1) * battery_status.width / 3, y2: ymax - 2 * margin.bottom};
+    let battery_bar = {x1: battery_status.x + battery * battery_status.width / 3, y1: ymax - ymax / 10 + 2 * margin.bottom, x2: battery_status.x + (battery + 1) * battery_status.width / 3, y2: ymax - 2 * margin.bottom};
     g.fillRect(battery_bar.x1, battery_bar.y1, battery_bar.x2, battery_bar.y2);
   }
 }
@@ -255,13 +253,13 @@ function drawBatteryBar(battery) {
   // Draw new bar
   g.setColor(0,0,0); // Black
 
-  var battery_bar = {x1: battery_status.x + battery * battery_status.width / 3, y1: ymax - ymax / 10 + 2 * margin.bottom, x2: battery_status.x + (battery + 1) * battery_status.width / 3, y2: ymax - 2 * margin.bottom};
+  let battery_bar = {x1: battery_status.x + battery * battery_status.width / 3, y1: ymax - ymax / 10 + 2 * margin.bottom, x2: battery_status.x + (battery + 1) * battery_status.width / 3, y2: ymax - 2 * margin.bottom};
   g.fillRect(battery_bar.x1, battery_bar.y1, battery_bar.x2, battery_bar.y2);
 }
 
 function drawBatteryStatus(battery) {
-  var battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
-  
+  let battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
+
   clearBatteryStatus();
   drawBatteryBar(battery);
 }
@@ -383,10 +381,10 @@ function renderFastContents(watchState, showHighlighted) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Contents to be rendered
 ////////////////////////////////////////////////////////////////////////////////////////////
-var showHighlighted = true;
+let showHighlighted = true;
 
 // State to be rendered
-var renderedWatchState = {
+let renderedWatchState = {
   dividers: {
     colon: true,
     dot: false
@@ -423,7 +421,7 @@ var renderedWatchState = {
 
 // Update for clock mode
 function updateClock() {
-  var time = getTimeStrings();
+  let time = getTimeStrings();
 
   renderedWatchState.dividers.colon = true;
   renderedWatchState.dividers.dot = false;
@@ -436,10 +434,10 @@ function updateClock() {
 
 // Update for stopwatch mode
 function updateStopwatch(elapsedTenMilliseconds) {
-  var tenmilliseconds = (elapsedTenMilliseconds % 100).toString().padStart(2, '0');
-  var seconds = (Math.floor(elapsedTenMilliseconds / 100) % 60).toString().padStart(2, '0');
-  var minutes = (Math.floor(elapsedTenMilliseconds / 6000) % 60).toString().padStart(2, '0');
-  var hours = (Math.floor(elapsedTenMilliseconds / 360000) % 24).toString(); // Not padded on purpose
+  let tenmilliseconds = (elapsedTenMilliseconds % 100).toString().padStart(2, '0');
+  let seconds = (Math.floor(elapsedTenMilliseconds / 100) % 60).toString().padStart(2, '0');
+  let minutes = (Math.floor(elapsedTenMilliseconds / 6000) % 60).toString().padStart(2, '0');
+  let hours = (Math.floor(elapsedTenMilliseconds / 360000) % 24).toString(); // Not padded on purpose
 
   renderedWatchState.dividers.colon = true;
   renderedWatchState.dividers.dot = true;
@@ -452,9 +450,9 @@ function updateStopwatch(elapsedTenMilliseconds) {
 
 // Update for timer mode
 function updateTimer(timeLeft) {
-  var seconds = (timeLeft % 60).toString().padStart(2, '0');
-  var minutes = (Math.floor(timeLeft / 60) % 60).toString().padStart(2, '0');
-  var time = getTimeStrings();
+  let seconds = (timeLeft % 60).toString().padStart(2, '0');
+  let minutes = (Math.floor(timeLeft / 60) % 60).toString().padStart(2, '0');
+  let time = getTimeStrings();
 
   renderedWatchState.dividers.colon = true;
   renderedWatchState.dividers.dot = false;
@@ -509,7 +507,7 @@ const modes = [
         BTN1_long: () => {},
         BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
         BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => {clearInterval(stopWatchTimer); nextMode();},
+        BTN3_short: () => nextMode(),
         BTN3_long: () => {}
       },
       running: {
@@ -525,7 +523,7 @@ const modes = [
         BTN1_long: () => {},
         BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
         BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => {clearInterval(stopWatchTimer); nextMode();},
+        BTN3_short: () => nextMode(),
         BTN3_long: () => {}
       }
     }
@@ -599,8 +597,8 @@ function getUpdate(mode) {
   return modes.find(m => m.modeName === mode).update;
 }
 
-var currentMode = "clock"; // initial mode
-var currentModeState = getDefaultState(currentMode); // initial state of initial mode
+let currentMode = "clock"; // initial mode
+let currentModeState = getDefaultState(currentMode); // initial state of initial mode
 
 function nextMode() {
   index = getIndexByMode(currentMode);
@@ -676,8 +674,7 @@ renderFastContents(renderedWatchState, showHighlighted);
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Clock & Rendering intervals and events
 ////////////////////////////////////////////////////////////////////////////////////////////
-const MAIN_INTERVAL_MS = 250;
-var mainTicks = 0;
+let mainTicks = 0;
 
 function mainInterval(watchState) {
   // After 1000 ms
@@ -713,7 +710,7 @@ function mainInterval(watchState) {
 
   // After 500 ms
   if ((mainTicks % (500 / MAIN_INTERVAL_MS)) == 0) {
-    showHighlighted = !showHighlighted;
+    showHighlighted = !showHighlighted; // 1 second blinking
   }
 
   // Each call
@@ -736,15 +733,14 @@ Bangle.on('lcdPower',on =>{
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Handle stopwatch
 ////////////////////////////////////////////////////////////////////////////////////////////
-var stopwatchTimer;
-var stopwatchTicks = 0; // 10 ms per tick
-
+let stopwatchTimer; // high-speed timer for countdown ticks
+let stopwatchTicks = 0; // 10 ms per tick
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Handle timer
 //////////////////////////////////////////////////////////////////////////////////////////// 
-var timerStartValue = 180; // in Seconds
-var timerValue = timerStartValue; // in Seconds
+let timerStartValue = 180; // in Seconds
+let timerValue = timerStartValue; // in Seconds
 
 function alarm() {
   var buzzCount = ALARM_BUZZ_COUNT;
