@@ -16,6 +16,7 @@
   {
     "id": "casio3159",
     "name": "Casio 3159",
+    "shortName":"Casio 3159",
     "version": "0.01",
     "description": "Casio 3159 inspired clock",
     "icon": "app.png",
