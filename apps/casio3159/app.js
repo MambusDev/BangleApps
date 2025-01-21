@@ -47,10 +47,21 @@ const BATTERY_MEDIUM = 1;
 const BATTERY_LOW = 0;
 
 // Memory logging
-const LOGGING_ENABLED = false;
+const LOGGING_ENABLED = true;
 
 // Interval of main timer
 const MAIN_INTERVAL_MS = 250;
+
+// Timer Mode
+const MAX_TIMER_START_VALUE = (100 * 60 * 60) - 1;
+
+// Stopwatch Mode
+const MAX_STOPWATCH_TICK = (9 * 60 * 60 * 100) - 1;
+const STOPWATCH_INTERVAL_MS = 80;
+const MS_PER_TICK = 10;
+
+// Save state
+const SAVE_FILE = "casiostate.json";
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Icon images (converted with https://www.espruino.com/Image+Converter)
@@ -454,13 +465,14 @@ function updateStopwatch(elapsedTenMilliseconds) {
 function updateTimer(timeLeft) {
   let seconds = (timeLeft % 60).toString().padStart(2, '0');
   let minutes = (Math.floor(timeLeft / 60) % 60).toString().padStart(2, '0');
+  let hours = (Math.floor(timeLeft / 3600) % 100).toString().padStart(2, '0');
   let time = getTimeStrings();
 
   renderedWatchState.dividers.colon = true;
   renderedWatchState.dividers.dot = false;
-  renderedWatchState.lowerDigits.value = "";
-  renderedWatchState.middleDigits.value = seconds;
-  renderedWatchState.upperDigits.value = minutes;
+  renderedWatchState.lowerDigits.value = seconds;
+  renderedWatchState.middleDigits.value = minutes;
+  renderedWatchState.upperDigits.value = hours;
   renderedWatchState.textField.text = "TR";
   renderedWatchState.textBox.text = time.hours + ":" + time.minutes;
 }
@@ -483,101 +495,7 @@ Bangle.on('charging', charging => { if (charging) Bangle.buzz(); });
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Modes
 ////////////////////////////////////////////////////////////////////////////////////////////
-const modes = [
-  {
-    modeName: "clock",
-    defaultState: "running",
-    update: () => updateClock(),
-    callbacks: {
-      running: {
-        BTN1_short: () => {},
-        BTN1_long: () => {},
-        BTN2_short: () => {},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
-        BTN3_long: () => {}
-      }
-    }
-  },
-  {
-    modeName: "stopwatch",
-    defaultState: "idle",
-    update: () => updateStopwatch(stopwatchTicks),
-    callbacks: {
-      idle: {
-        BTN1_short: () => {stopwatchTicks = 0; updateStopwatch(stopwatchTicks);},
-        BTN1_long: () => {},
-        BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
-        BTN3_long: () => {}
-      },
-      running: {
-        BTN1_short: () => {},
-        BTN1_long: () => {},
-        BTN2_short: () => {currentModeState = "paused"; clearInterval(stopWatchTimer);},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => {clearInterval(stopWatchTimer); nextMode();},
-        BTN3_long: () => {}
-      },
-      paused: {
-        BTN1_short: () => {stopwatchTicks = 0; currentModeState = "idle"; updateStopwatch(stopwatchTicks);},
-        BTN1_long: () => {},
-        BTN2_short: () => {currentModeState = "running"; stopWatchTimer = setInterval(() => { stopwatchTicks+=8; updateStopwatch(stopwatchTicks);}, 80);},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
-        BTN3_long: () => {}
-      }
-    }
-  },
-  {
-    modeName: "timer",
-    defaultState: "idle",
-    update: () => updateTimer(timerValue),
-    callbacks: {
-      idle: {
-        BTN1_short: () => {timerValue = timerStartValue; updateTimer(timerValue);},
-        BTN1_long: () => {currentModeState = "chg_minutes"; renderedWatchState.upperDigits.highlighted = true; renderedWatchState.middleDigits.highlighted = false;},
-        BTN2_short: () => {currentModeState = "running";},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
-        BTN3_long: () => {}
-      },
-      running: {
-        BTN1_short: () => {},
-        BTN1_long: () => {},
-        BTN2_short: () => {currentModeState = "paused";},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
-        BTN3_long: () => {}
-      },
-      paused: {
-        BTN1_short: () => {timerValue = timerStartValue; currentModeState = "idle"; updateTimer(timerValue);},
-        BTN1_long: () => {},
-        BTN2_short: () => {currentModeState = "running";},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => nextMode(),
-        BTN3_long: () => {}
-      },
-      chg_minutes: {
-        BTN1_short: () => {timerStartValue+=60; timerValue=timerStartValue; updateTimer(timerValue);},
-        BTN1_long: () => {},
-        BTN2_short: () => {currentModeState = "chg_seconds"; renderedWatchState.upperDigits.highlighted = false; renderedWatchState.middleDigits.highlighted = true;},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => {timerStartValue-=60; timerValue=timerStartValue; updateTimer(timerValue);},
-        BTN3_long: () => {}
-      },
-      chg_seconds: {
-        BTN1_short: () => {timerStartValue+=1; timerValue=timerStartValue; updateTimer(timerValue);},
-        BTN1_long: () => {},
-        BTN2_short: () => {currentModeState = "idle"; renderedWatchState.upperDigits.highlighted = false; renderedWatchState.middleDigits.highlighted = false;},
-        BTN2_long: () => Bangle.showLauncher(),
-        BTN3_short: () => {timerStartValue-=1; timerValue=timerStartValue; updateTimer(timerValue);},
-        BTN3_long: () => {}
-      }
-    }
-  }
-];
+const modes = [];
 
 function getIndexByMode(modeName) {
   return modes.findIndex(m => m.modeName === modeName);
@@ -599,9 +517,6 @@ function getUpdate(mode) {
   return modes.find(m => m.modeName === mode).update;
 }
 
-let currentMode = "clock"; // initial mode
-let currentModeState = getDefaultState(currentMode); // initial state of initial mode
-
 function nextMode() {
   index = getIndexByMode(currentMode);
   new_index = (index + 1) % modes.length;
@@ -615,6 +530,37 @@ function nextMode() {
   renderUi(renderedWatchState);
   renderSlowContents(renderedWatchState, showHighlighted);
   renderFastContents(renderedWatchState, showHighlighted);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Save state
+////////////////////////////////////////////////////////////////////////////////////////////
+
+function saveValue(key, value) {
+  let data = loadAllValues(); // Load existing data
+  data[key] = value; // Add or update the key-value pair
+  require("Storage").write(SAVE_FILE, JSON.stringify(data));
+}
+
+function loadAllValues() {
+  const fileContents = require("Storage").read(SAVE_FILE);
+  if (fileContents) {
+    try {
+      const data = JSON.parse(fileContents);
+      return data;
+    } catch (error) {
+    }
+  }
+  return {}; // Return an empty object if the file doesn't exist or is invalid
+}
+
+function initializeLoadedValues() {
+  let data = loadAllValues();
+
+  // Check if the key exists before initializing
+  if ("timerStartValue" in data) {
+    timerStartValue = data.timerStartValue;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -657,12 +603,177 @@ function logSystemState() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+// Handle clock mode
+////////////////////////////////////////////////////////////////////////////////////////////
+let clockMode =
+{
+  modeName: "clock",
+  defaultState: "running",
+  update: () => updateClock(),
+  callbacks: {
+    running: {
+      BTN1_short: () => {},
+      BTN1_long: () => {},
+      BTN2_short: () => {},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => nextMode(),
+      BTN3_long: () => {}
+    }
+  }
+};
+
+modes.push(clockMode);
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Handle stopwatch mode
+////////////////////////////////////////////////////////////////////////////////////////////
+let stopwatchTimer; // high-speed timer for countdown ticks
+let stopwatchTicks = 0; // 10 ms per tick
+
+function incStopwatchTicks() {
+  stopwatchTicks+=STOPWATCH_INTERVAL_MS / MS_PER_TICK;
+  stopwatchTicks = Math.min(stopwatchTicks, MAX_STOPWATCH_TICK);
+}
+
+let stopwatchMode =
+{
+  modeName: "stopwatch",
+  defaultState: "idle",
+  update: () => updateStopwatch(stopwatchTicks),
+  callbacks: {
+    idle: {
+      BTN1_short: () => {stopwatchTicks = 0; updateStopwatch(stopwatchTicks);},
+      BTN1_long: () => {},
+      BTN2_short: () => {currentModeState = "running"; stopwatchTimer = setInterval(() => { incStopwatchTicks(); updateStopwatch(stopwatchTicks);}, STOPWATCH_INTERVAL_MS);},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => nextMode(),
+      BTN3_long: () => {}
+    },
+    running: {
+      BTN1_short: () => {},
+      BTN1_long: () => {},
+      BTN2_short: () => {currentModeState = "paused"; clearInterval(stopwatchTimer);},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => {clearInterval(stopwatchTimer); nextMode();},
+      BTN3_long: () => {}
+    },
+    paused: {
+      BTN1_short: () => {stopwatchTicks = 0; currentModeState = "idle"; updateStopwatch(stopwatchTicks);},
+      BTN1_long: () => {},
+      BTN2_short: () => {currentModeState = "running"; stopwatchTimer = setInterval(() => { incStopwatchTicks(); updateStopwatch(stopwatchTicks);}, STOPWATCH_INTERVAL_MS);},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => nextMode(),
+      BTN3_long: () => {}
+    }
+  }
+};
+
+modes.push(stopwatchMode);
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Handle timer mode
+//////////////////////////////////////////////////////////////////////////////////////////// 
+let timerStartValue = 180; // in Seconds
+let timerValue = timerStartValue; // in Seconds
+
+function decTimerValue() {
+  timerValue--;
+  timerValue = Math.max(0, timerValue);
+}
+
+function addTimerStartValue(add) {
+  timerStartValue += add;
+  timerStartValue = Math.max(0, timerStartValue);
+  timerStartValue = Math.min(MAX_TIMER_START_VALUE , timerStartValue);
+}
+
+function alarm() {
+  var buzzCount = ALARM_BUZZ_COUNT;
+  function buzz() {
+    if (setting('quiet')>1) return; // total silence, not even buzzing
+    Bangle.buzz(ALARM_BUZZ_TIME_MS).then(()=>{
+      setTimeout(()=>{
+        Bangle.beep(ALARM_BUZZ_TIME_MS, ALARM_BEEP_FREQ_HZ);
+        Bangle.buzz(ALARM_BUZZ_TIME_MS).then(function() {
+          if (buzzCount--) setTimeout(buzz, ALARM_BUZZ_PAUSE_MS);
+        });
+      },100);
+    });
+  }
+  buzz();
+}
+
+let timerMode =
+{
+  modeName: "timer",
+  defaultState: "idle",
+  update: () => updateTimer(timerValue),
+  callbacks: {
+    idle: {
+      BTN1_short: () => {timerValue = timerStartValue; updateTimer(timerValue);},
+      BTN1_long: () => {currentModeState = "chg_hours"; renderedWatchState.upperDigits.highlighted = true; renderedWatchState.middleDigits.highlighted = false; renderedWatchState.lowerDigits.highlighted = false;},
+      BTN2_short: () => {currentModeState = "running";},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => nextMode(),
+      BTN3_long: () => {}
+    },
+    running: {
+      BTN1_short: () => {},
+      BTN1_long: () => {},
+      BTN2_short: () => {currentModeState = "paused";},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => nextMode(),
+      BTN3_long: () => {}
+    },
+    paused: {
+      BTN1_short: () => {timerValue = timerStartValue; currentModeState = "idle"; updateTimer(timerValue);},
+      BTN1_long: () => {},
+      BTN2_short: () => {currentModeState = "running";},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => nextMode(),
+      BTN3_long: () => {}
+    },
+    chg_hours: {
+      BTN1_short: () => {addTimerStartValue(3600); timerValue=timerStartValue; updateTimer(timerValue);},
+      BTN1_long: () => {},
+      BTN2_short: () => {currentModeState = "chg_minutes"; renderedWatchState.upperDigits.highlighted = false; renderedWatchState.middleDigits.highlighted = true; renderedWatchState.lowerDigits.highlighted = false;},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => {addTimerStartValue(-3600); timerValue=timerStartValue; updateTimer(timerValue);},
+      BTN3_long: () => {}
+    },
+    chg_minutes: {
+      BTN1_short: () => {addTimerStartValue(60); timerValue=timerStartValue; updateTimer(timerValue);},
+      BTN1_long: () => {},
+      BTN2_short: () => {currentModeState = "chg_seconds"; renderedWatchState.upperDigits.highlighted = false; renderedWatchState.middleDigits.highlighted = false; renderedWatchState.lowerDigits.highlighted = true;},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => {addTimerStartValue(-60); timerValue=timerStartValue; updateTimer(timerValue);},
+      BTN3_long: () => {}
+    },
+    chg_seconds: {
+      BTN1_short: () => {addTimerStartValue(1); timerValue=timerStartValue; updateTimer(timerValue);},
+      BTN1_long: () => {},
+      BTN2_short: () => {saveValue("timerStartValue", timerStartValue); currentModeState = "idle"; renderedWatchState.upperDigits.highlighted = false; renderedWatchState.middleDigits.highlighted = false; renderedWatchState.lowerDigits.highlighted = false;},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => {addTimerStartValue(-1); timerValue=timerStartValue; updateTimer(timerValue);},
+      BTN3_long: () => {}
+    }
+  }
+};
+
+modes.push(timerMode);
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // App startup script
 ////////////////////////////////////////////////////////////////////////////////////////////
+let currentMode = "clock"; // initial mode
+let currentModeState = getDefaultState(currentMode); // initial state of initial mode
+
 // Reset the state of the graphics library
 g.reset();
 // Clear the screen once, at startup
 g.clear();
+// Load save state
+initializeLoadedValues();
 // Initial rendering
 updateSystemStatus();
 getUpdate(currentMode)();
@@ -682,7 +793,7 @@ function mainInterval(watchState) {
       updateClock();
     } else if (currentMode == "timer") {
       if (currentModeState == "running") {
-        timerValue--;
+        decTimerValue();
         if (timerValue <= 0) {
           currentModeState = "idle";
           timerValue = timerStartValue;
@@ -728,34 +839,6 @@ Bangle.on('lcdPower',on =>{
     renderFastContents(renderedWatchState);
   }
 });
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// Handle stopwatch mode
-////////////////////////////////////////////////////////////////////////////////////////////
-let stopwatchTimer; // high-speed timer for countdown ticks
-let stopwatchTicks = 0; // 10 ms per tick
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// Handle timer mode
-//////////////////////////////////////////////////////////////////////////////////////////// 
-let timerStartValue = 180; // in Seconds
-let timerValue = timerStartValue; // in Seconds
-
-function alarm() {
-  var buzzCount = ALARM_BUZZ_COUNT;
-  function buzz() {
-    if (setting('quiet')>1) return; // total silence, not even buzzing
-    Bangle.buzz(ALARM_BUZZ_TIME_MS).then(()=>{
-      setTimeout(()=>{
-        Bangle.beep(ALARM_BUZZ_TIME_MS, ALARM_BEEP_FREQ_HZ);
-        Bangle.buzz(ALARM_BUZZ_TIME_MS).then(function() {
-          if (buzzCount--) setTimeout(buzz, ALARM_BUZZ_PAUSE_MS);
-        });
-      },100);
-    });
-  }
-  buzz();
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Button Callback Logic
