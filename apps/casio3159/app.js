@@ -47,7 +47,7 @@ const BATTERY_MEDIUM = 1;
 const BATTERY_LOW = 0;
 
 // Memory logging
-const LOGGING_ENABLED = false;
+const LOGGING_ENABLED = true;
 
 // Interval of main timer
 const MAIN_INTERVAL_MS = 250;
@@ -62,6 +62,23 @@ const MS_PER_TICK = 10;
 
 // Save state
 const SAVE_FILE = "casiostate.json";
+
+// Colors
+const BLACK = {r:0,g:0,b:0};
+const LIGHT_GRAY = {r:0.9,g:1,b:0.9};
+const BLUE = {r:0.3,g:0.9,b:1};
+const TURKISH = {r:0.1,g:1,b:0.8};
+const YELLOW = {r:1,g:0.8,b:0.1};
+const RED = {r:1,g:0.2,b:0.5};
+
+const STYLES = [
+  {bg: LIGHT_GRAY, fg: BLACK},
+  {bg: BLUE, fg: BLACK},
+  {bg: TURKISH, fg: BLACK},
+  {bg: YELLOW, fg: BLACK},
+  {bg: RED, fg: BLACK},
+  {bg: BLACK, fg: LIGHT_GRAY},
+];
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Icon images (converted with https://www.espruino.com/Image+Converter)
@@ -151,60 +168,87 @@ function alarmIsSet() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+// Colors and styles
+////////////////////////////////////////////////////////////////////////////////////////////
+// Could be changed for customization
+let fgColor = BLACK;  // Default
+let bgColor = LIGHT_GRAY;  // Default
+let currentStyle = 0; // Default
+
+function setStyle(index) {
+ fgColor = STYLES[index].fg;
+ bgColor = STYLES[index].bg;
+}
+
+function nextStyle() {
+  currentStyle = (currentStyle + 1) % STYLES.length;
+  setStyle(currentStyle);
+}
+
+function setColor(g, color) {
+  g.setColor(color.r, color.g, color.b);
+  return g;
+}
+
+function setBgColor(g, color) {
+  g.setBgColor(color.r, color.g, color.b);
+  return g;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // Drawing functions
 ////////////////////////////////////////////////////////////////////////////////////////////
-
 function drawSmallDot() {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 3);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
   g.drawString(".", xmax - margin.right - 42, ymax - margin.bottom - 2.5 * ymax / 10, true);
 }
 
 function drawLowerDigits(digits) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 3);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
   g.drawString(digits, xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
 }
 
 function drawUpperDigits(digits) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
   g.drawString(digits, xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, true);
 }
 
 function drawColon() {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
   g.drawString(":", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
 }
 
 function drawDot() {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
   g.drawString(".", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
 }
 
 function drawMiddleDigits(digits) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
   g.drawString(digits, xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, true); // 105 = three times font width
 }
 
 function drawBatteryLevels() {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("Teletext5x9Ascii", 2);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
 
@@ -220,15 +264,13 @@ function drawBatteryLevels() {
 }
 
 function drawStaticElements() {
-  // Draw Background
-  g.setColor(0.9,1,0.9); // Green-Gray
-  g.setBgColor(0.9,1,0.9); // Green-Gray
-  //g.setColor(0.1,0.8,1); // Blue (led on)
-
+  // Draw Background Color
+  setColor(g, bgColor);
   g.fillRect(xmin, ymin + margin.top - 4, xmax, ymax);
 
   // Draw UI Borders
-  g.setColor(0,0,0); // Black
+  setColor(g, fgColor); // Black
+
   // Top right box
   g.drawRect(center.x, ymin + margin.top, xmax - margin.right, ymin + ymax / 4 + margin.top);
   g.drawRect(center.x + 1, ymin + margin.top + 1, xmax - margin.right - 1, ymin + ymax / 4 + margin.top - 1); // Line width 2
@@ -245,16 +287,16 @@ function drawStaticElements() {
 }
 
 function drawTextField(text) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("Teletext5x9Ascii", 5);
   g.setFontAlign(1, -1, 0); // right, top, normal
   g.drawString(text, center.x - margin.right, ymin + 1.5 * margin.top, true);
 }
 
 function drawTextBox(text) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
   g.setFont("8x12", 4);
   g.setFontAlign(1, -1, 0); // right, top, normal
   g.drawString(text, xmax - 1.5 * margin.right, ymin + 1.25 * margin.top, true);
@@ -263,7 +305,7 @@ function drawTextBox(text) {
 function clearBatteryStatus() {
   let battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
 
-  g.setColor(0.9,1,0.9); // Green-Gray
+  setColor(g, bgColor);
 
   for (let battery = 0; battery <= 2; battery++) {
     let battery_bar = {x1: battery_status.x + battery * battery_status.width / 3, y1: ymax - ymax / 10 + 2 * margin.bottom, x2: battery_status.x + (battery + 1) * battery_status.width / 3, y2: ymax - 2 * margin.bottom};
@@ -273,7 +315,7 @@ function clearBatteryStatus() {
 
 function drawBatteryBar(battery) {
   // Draw new bar
-  g.setColor(0,0,0); // Black
+  setColor(g, fgColor);
 
   let battery_bar = {x1: battery_status.x + battery * battery_status.width / 3, y1: ymax - ymax / 10 + 2 * margin.bottom, x2: battery_status.x + (battery + 1) * battery_status.width / 3, y2: ymax - 2 * margin.bottom};
   g.fillRect(battery_bar.x1, battery_bar.y1, battery_bar.x2, battery_bar.y2);
@@ -287,8 +329,8 @@ function drawBatteryStatus(battery) {
 }
 
 function drawBtStatus(bt_enabled, bt_connected) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0,0,0); // Black
+  setColor(g, fgColor);
+  setBgColor(g, fgColor);
 
   if (bt_enabled) {
     if (bt_connected) {
@@ -297,7 +339,7 @@ function drawBtStatus(bt_enabled, bt_connected) {
       g.drawImage(bt_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
     }
   } else {
-    g.setColor(0.9,1,0.9); // Green-Gray
+    setColor(g, bgColor);
     x1 = xmin + margin.left;
     y1 = ymin + 1.5 * margin.top;
     x2 = x1 + 48 * 0.4; // Icon size = 48x48
@@ -307,8 +349,8 @@ function drawBtStatus(bt_enabled, bt_connected) {
 }
 
 function drawBeepStatus(muted) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0,0,0); // Black
+  setColor(g, fgColor);
+  setBgColor(g, fgColor);
 
   if (!muted) {
     g.drawImage(beep_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
@@ -318,13 +360,13 @@ function drawBeepStatus(muted) {
 }
 
 function drawChargingStatus(charging) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0,0,0); // Black
+  setColor(g, fgColor);
+  setBgColor(g, fgColor);
 
   if (charging) {
     g.drawImage(charging_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top + 24, {scale:0.4});
   } else {
-    g.setColor(0.9,1,0.9); // Green-Gray
+    setColor(g, bgColor);
     x1 = xmin + margin.left + 24;
     y1 = ymin + 1.5 * margin.top + 24;
     x2 = x1 + 48 * 0.4; // Icon size = 48x48
@@ -334,13 +376,13 @@ function drawChargingStatus(charging) {
 }
 
 function drawAlarmStatus(alarm) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0,0,0); // Black
+  setColor(g, fgColor);
+  setBgColor(g, fgColor);
 
   if (alarm) {
     g.drawImage(bell_icon, xmin + margin.left, ymin + 1.5 * margin.top + 24, {scale:0.4});
   } else {
-    g.setColor(0.9,1,0.9); // Green-Gray
+    setColor(g, bgColor);
     x1 = xmin + margin.left;
     y1 = ymin + 1.5 * margin.top + 24;
     x2 = x1 + 48 * 0.4; // Icon size = 48x48
@@ -350,8 +392,9 @@ function drawAlarmStatus(alarm) {
 }
 
 function drawCalendarWeek(clear) {
-  g.setColor(0,0,0); // Black
-  g.setBgColor(0.9,1,0.9); // Green-Gray
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
+
   g.setFont("Teletext5x9Ascii", 2);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
   x = xmax - margin.right - 7;
@@ -422,6 +465,12 @@ function renderFastContents(watchState, showHighlighted) {
 
   drawLowerDigits(lowerDigits); // used for milliseconds
 
+}
+
+function renderAll(watchState, showHighlighted) {
+  renderUi(watchState);
+  renderSlowContents(watchState, showHighlighted);
+  renderFastContents(watchState, showHighlighted);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -619,6 +668,14 @@ function initializeLoadedValues() {
     timerStartValue = data.timerStartValue;
     timerValue = timerStartValue;
   }
+  if ("currentStyle" in data) {
+    currentStyle = data.currentStyle;
+    if (currentStyle >= STYLES.length) {
+      // Corrupt data
+      currentStyle = 0;
+    }
+    setStyle(currentStyle);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -670,7 +727,7 @@ let clockMode =
   update: () => updateClock(),
   callbacks: {
     running: {
-      BTN1_short: () => {},
+      BTN1_short: () => {nextStyle(); saveValue("currentStyle", currentStyle); renderAll(renderedWatchState, showHighlighted);},
       BTN1_long: () => {},
       BTN2_short: () => {},
       BTN2_long: () => Bangle.showLauncher(),
@@ -875,9 +932,7 @@ initializeLoadedValues();
 // Initial rendering
 updateSystemStatus();
 getUpdate(currentMode)();
-renderUi(renderedWatchState);
-renderSlowContents(renderedWatchState, showHighlighted);
-renderFastContents(renderedWatchState, showHighlighted);
+renderAll(renderedWatchState, showHighlighted);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Clock & Rendering intervals and events
@@ -935,9 +990,7 @@ Bangle.on('lcdPower',on =>{
   if (on) {
     updateSystemStatus();
     getUpdate(currentMode);
-    renderUi(renderedWatchState);
-    renderSlowContents(renderedWatchState);
-    renderFastContents(renderedWatchState);
+    renderAll(renderedWatchState, showHighlighted);
   }
 });
 
