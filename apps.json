@@ -28,7 +28,13 @@
     "allow_emulator": true,
     "storage": [
       {"name":"casio.app.js","url":"app.js","src": true},
-      {"name":"casio.img","url":"app-icon.js","evaluate":true}
+      {"name":"casio.img","url":"app-icon.js","evaluate":true},
+      {"name":"bell.icon","url":"bell.icon"},
+      {"name":"beep.icon","url":"beep.icon"},
+      {"name":"muted.icon","url":"muted.icon"},
+      {"name":"bt_en.icon","url":"bt_en.icon"},
+      {"name":"bt_con.icon","url":"bt_con.icon"},
+      {"name":"charging.icon","url":"charging.icon"}
     ]
   },
   {

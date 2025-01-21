@@ -47,7 +47,7 @@ const BATTERY_MEDIUM = 1;
 const BATTERY_LOW = 0;
 
 // Memory logging
-const LOGGING_ENABLED = true;
+const LOGGING_ENABLED = false;
 
 // Interval of main timer
 const MAIN_INTERVAL_MS = 250;
@@ -80,22 +80,18 @@ const STYLES = [
   {bg: BLACK, fg: LIGHT_GRAY},
 ];
 
+// Widgets
+const WIDGET_SHOW_TIME_MS = 3000;
+
 ////////////////////////////////////////////////////////////////////////////////////////////
-// Icon images (converted with https://www.espruino.com/Image+Converter)
+// Handle widgets
 ////////////////////////////////////////////////////////////////////////////////////////////
-const bell_icon = E.toArrayBuffer(atob("MDCBAf///////////////////////////////////////////////////D//////+D//////+B///+//+B//98f/4Af/58//gAP/485/AAH+c5x+AAD+c5z+AAB/OZz8AAB/OTn8AAA/OTn8AAA/mTn4AAA/nTn4AAA/nDn4AAA/nDn4AAA/nDn4AAA/nDn4AAA/nTn4AAA/uTn4AAA/OZz4AAA/OZz4AAA/OZx4AAA+c854AAAec8/4AAAf4+fwAAAf5+/wAAAP///gAAAH///AAAAH///AAAAD///AAAAD////////////////////8A//////8B///////D///////////////////////////////////////////////////w=="));
+Bangle.loadWidgets();
 
-const mute_icon = E.toArrayBuffer(atob("HDCBAf/+f///4////j///+P///4f+f/h/4/+D/B/4H8H/gf4P+A/wf4B/g/gH+D+AP8H5gf4PnA/g+fD/B5+H+Dn8P8Gfw/wZ/j/gn+P/Af8/8B/z/4H/P/wf8//g/z/+D/P/8H8//4Pj//g+f/+Bx//4DP//kH//+Qf//5g/+AnB/gAcH4AB4PAAHwYAAfgAAD+AAAP8QAA/7AAH/8AA//wAH//AA//+AP//w=="));
-
-const beep_icon = E.toArrayBuffer(atob("HDCBAf/+f///4////j///+P///4f///h///+D///4H///gf//+A///4B///gH//+AP//5gf//nA//+fD//5+H//n8P/+fw//5/j//n+P/+f8//5/z//n/P/+f8//5/z//n/P/+f8//5/j//n+f/+fx//5/P//n///+f///5//+An//gAf/4AB//AAH/4AAf/AAD/8AAP/wAA//AAH/8AA//wAH//AA//+AP//w=="));
-  
-const bt_icon = E.toArrayBuffer(atob("MDCBAf//////////+///////+f//////+P//////+H//////+D//////+B//////+Af/////+AP/////+AH/////+ED/////+GB/////+HA////x+HgP///w+Hwf///weHg////4OHB////8GGD////+CEH/////AAP/////gAf/////wA//////4B//////8D//////8D//////4B//////wA//////gAf/////AAP////+CEH////8GGD////4OHB////weHg////g+Hwf///x+Hgf///7+HA/////+GB/////+ED/////+AH/////+AP/////+Af/////+B//////+D//////+H//////+P//////+f//////+////////////w=="));
-
-const bt_con_icon = E.toArrayBuffer(atob("MDCBAf//////////+///////+f//////+P//////+H//////+D//////+B//////+Af/////+AP/////+AH/////+ED/////+GB/////+HA////x+HgP///w+Hwf///weHg////4OHB////8GGD////+CEH/////AAP/////gAf///7/wA//f/x/4B/+P/g/8D/8H/Af8D/4D/g/4B/8H/x/wA/+P/7/gAf/f///AAP////+CEH////8GGD////4OHB////weHg////g+Hwf///x+Hgf///7+HA/////+GB/////+ED/////+AH/////+AP/////+Af/////+B//////+D//////+H//////+P//////+f//////+////////////w=="));
-
-
-const charging_icon = 
-E.toArrayBuffer(atob("MDCBAf//////////////////////////////////4Af/////wAP/////wAP/////wAP////8AAA////4AAAf///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAQAP///wAQAP///wAwAP///wAwAP///wBwAP///wBwAP///wDwAP///wD/wP///wH/gP///wH/gP///wP/AP///wAPAP///wAOAP///wAOAP///wAMAP///wAMAP///wAIAP///wAIAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///wAAAP///4AAAf///8AAA//////////////////////////////////w=="));
+function clearWidgets() {
+  setColor(g, BLACK);
+  g.fillRect(0, 0, xmax, 24);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Read settings
@@ -117,6 +113,10 @@ function setting(key) {
   };
   if (!settings) { loadSettings(); }
   return (key in settings) ? settings[key] : DEFAULTS[key];
+}
+
+function loadIcon(filename) {
+  return E.toArrayBuffer(atob(require('Storage').read(filename)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -334,8 +334,10 @@ function drawBtStatus(bt_enabled, bt_connected) {
 
   if (bt_enabled) {
     if (bt_connected) {
+      bt_con_icon = loadIcon("bt_con.icon");
       g.drawImage(bt_con_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
     } else {
+      bt_icon = loadIcon("bt_en.icon");
       g.drawImage(bt_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
     }
   } else {
@@ -353,8 +355,10 @@ function drawBeepStatus(muted) {
   setBgColor(g, fgColor);
 
   if (!muted) {
+    beep_icon = loadIcon("beep.icon");
     g.drawImage(beep_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
   } else {
+    mute_icon = loadIcon("muted.icon");
     g.drawImage(mute_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
   }
 }
@@ -364,6 +368,7 @@ function drawChargingStatus(charging) {
   setBgColor(g, fgColor);
 
   if (charging) {
+    charging_icon = loadIcon("charging.icon");
     g.drawImage(charging_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top + 24, {scale:0.4});
   } else {
     setColor(g, bgColor);
@@ -380,6 +385,7 @@ function drawAlarmStatus(alarm) {
   setBgColor(g, fgColor);
 
   if (alarm) {
+    bell_icon = loadIcon("bell.icon");
     g.drawImage(bell_icon, xmin + margin.left, ymin + 1.5 * margin.top + 24, {scale:0.4});
   } else {
     setColor(g, bgColor);
@@ -729,7 +735,7 @@ let clockMode =
     running: {
       BTN1_short: () => {nextStyle(); saveValue("currentStyle", currentStyle); renderAll(renderedWatchState, showHighlighted);},
       BTN1_long: () => {},
-      BTN2_short: () => {},
+      BTN2_short: () => {Bangle.drawWidgets(); setTimeout( () => clearWidgets(), WIDGET_SHOW_TIME_MS);},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => nextMode(),
       BTN3_long: () => {}
@@ -955,6 +961,7 @@ function mainInterval(watchState) {
       }
       updateTimer(timerValue);
     }
+    if (global.gc) global.gc();
   }
 
   // After 10s
