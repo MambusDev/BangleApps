@@ -47,7 +47,7 @@ const BATTERY_MEDIUM = 1;
 const BATTERY_LOW = 0;
 
 // Memory logging
-const LOGGING_ENABLED = true;
+const LOGGING_ENABLED = false;
 
 // Interval of main timer
 const MAIN_INTERVAL_MS = 250;
@@ -117,6 +117,7 @@ function getTimeStrings() {
   let day = now.getDate().toString(); // Day of the month (1-31)
   let month = (now.getMonth() + 1).toString(); // Month (1-12)
   let weekday = now.getDay(); // Weekday (0-6, Sunday = 0)
+  let year = now.getFullYear().toString();
 
   // Convert weekday to a two-character string
   let weekdays_english = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
@@ -128,7 +129,7 @@ function getTimeStrings() {
     weekday = weekdays_english[weekday];
   }
 
-  return {hours: hours, minutes: minutes, seconds: seconds, day: day, month: month, weekday: weekday};
+  return {year: year, hours: hours, minutes: minutes, seconds: seconds, day: day, month: month, weekday: weekday};
 }
 
 function getBatteryLevel() {
@@ -153,7 +154,7 @@ function alarmIsSet() {
 // Drawing functions
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-function drawDot() {
+function drawSmallDot() {
   g.setColor(0,0,0); // Black
   g.setBgColor(0.9,1,0.9); // Green-Gray
   g.setFont("7x11Numeric7Seg", 3);
@@ -183,6 +184,14 @@ function drawColon() {
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
   g.drawString(":", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
+}
+
+function drawDot() {
+  g.setColor(0,0,0); // Black
+  g.setBgColor(0.9,1,0.9); // Green-Gray
+  g.setFont("7x11Numeric7Seg", 5);
+  g.setFontAlign(-1, 1, 0); // left, bottom, normal
+  g.drawString(".", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
 }
 
 function drawMiddleDigits(digits) {
@@ -340,6 +349,28 @@ function drawAlarmStatus(alarm) {
   }
 }
 
+function drawCalendarWeek(clear) {
+  g.setColor(0,0,0); // Black
+  g.setBgColor(0.9,1,0.9); // Green-Gray
+  g.setFont("Teletext5x9Ascii", 2);
+  g.setFontAlign(1, 1, 0); // right, bottom, normal
+  x = xmax - margin.right - 7;
+  y = ymax - margin.bottom - 2.5 * ymax / 10 - 33;
+
+  // Language
+  cwString = "CW";
+  if (language == "German") {
+    cwString = "KW";
+  }
+
+  // Draw
+  if (clear) {
+  g.drawString("  ", x, y, true);
+  } else {
+  g.drawString(cwString, x, y, true);
+  }
+}
+
 function renderUi(watchState) {
   drawStaticElements();
   drawBatteryStatus(watchState.battery);
@@ -368,6 +399,7 @@ function renderSlowContents(watchState, showHighlighted) {
     textField = watchState.textField.text;
   }
 
+  drawCalendarWeek(!watchState.cw);
   drawMiddleDigits(middleDigits);
   drawUpperDigits(upperDigits);
   drawTextField(textField);
@@ -377,6 +409,7 @@ function renderSlowContents(watchState, showHighlighted) {
   drawAlarmStatus(watchState.alarm);
   drawChargingStatus(watchState.charging);
   if (watchState.dividers.dot) drawDot();
+  if (watchState.dividers.smallDot) drawSmallDot();
   if (watchState.dividers.colon) drawColon();
 }
 
@@ -398,8 +431,10 @@ let showHighlighted = true;
 
 // State to be rendered
 let renderedWatchState = {
+  cw: false,
   dividers: {
     colon: true,
+    smallDot: false,
     dot: false
   },
   upperDigits: {
@@ -436,13 +471,31 @@ let renderedWatchState = {
 function updateClock() {
   let time = getTimeStrings();
 
+  renderedWatchState.cw = false;
   renderedWatchState.dividers.colon = true;
   renderedWatchState.dividers.dot = false;
+  renderedWatchState.dividers.smallDot = false;
   renderedWatchState.upperDigits.value = time.hours;
   renderedWatchState.middleDigits.value = time.minutes;
   renderedWatchState.lowerDigits.value = time.seconds;
   renderedWatchState.textField.text = time.weekday;
   renderedWatchState.textBox.text = time.day + "." + time.month.padStart(2, ' ');
+}
+
+// Update for calendar mode
+function updateCalendar() {
+  let time = getTimeStrings();
+  let now = new Date();
+
+  renderedWatchState.cw = true;
+  renderedWatchState.dividers.colon = false;
+  renderedWatchState.dividers.dot = true;
+  renderedWatchState.dividers.smallDot = false;
+  renderedWatchState.lowerDigits.value = getWeekNumber(now).toString().padStart(2, '0');
+  renderedWatchState.upperDigits.value = time.day;
+  renderedWatchState.middleDigits.value = time.month.padStart(2, '0');
+  renderedWatchState.textField.text = time.weekday;
+  renderedWatchState.textBox.text = time.year;
 }
 
 // Update for stopwatch mode
@@ -452,8 +505,10 @@ function updateStopwatch(elapsedTenMilliseconds) {
   let minutes = (Math.floor(elapsedTenMilliseconds / 6000) % 60).toString().padStart(2, '0');
   let hours = (Math.floor(elapsedTenMilliseconds / 360000) % 24).toString(); // Not padded on purpose
 
+  renderedWatchState.cw = false;
   renderedWatchState.dividers.colon = true;
-  renderedWatchState.dividers.dot = true;
+  renderedWatchState.dividers.dot = false;
+  renderedWatchState.dividers.smallDot = true;
   renderedWatchState.lowerDigits.value = tenmilliseconds;
   renderedWatchState.middleDigits.value = seconds;
   renderedWatchState.upperDigits.value = minutes;
@@ -468,8 +523,10 @@ function updateTimer(timeLeft) {
   let hours = (Math.floor(timeLeft / 3600) % 100).toString().padStart(2, '0');
   let time = getTimeStrings();
 
+  renderedWatchState.cw = false;
   renderedWatchState.dividers.colon = true;
   renderedWatchState.dividers.dot = false;
+  renderedWatchState.dividers.smallDot = false;
   renderedWatchState.lowerDigits.value = seconds;
   renderedWatchState.middleDigits.value = minutes;
   renderedWatchState.upperDigits.value = hours;
@@ -560,6 +617,7 @@ function initializeLoadedValues() {
   // Check if the key exists before initializing
   if ("timerStartValue" in data) {
     timerStartValue = data.timerStartValue;
+    timerValue = timerStartValue;
   }
 }
 
@@ -623,6 +681,46 @@ let clockMode =
 };
 
 modes.push(clockMode);
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Handle calendar mode
+////////////////////////////////////////////////////////////////////////////////////////////
+function ISO8601_week_no(dt) 
+{
+  var tdt = new Date(dt.valueOf());
+  var dayn = (dt.getDay() + 6) % 7;
+  tdt.setDate(tdt.getDate() - dayn + 3);
+  var firstThursday = tdt.valueOf();
+  tdt.setMonth(0, 1);
+  if (tdt.getDay() !== 4) 
+  {
+    tdt.setMonth(0, 1 + ((4 - tdt.getDay()) + 7) % 7);
+  }
+  return 1 + Math.ceil((firstThursday - tdt) / 604800000);
+}
+
+function getWeekNumber(datetime) {
+  return ISO8601_week_no(datetime);
+}
+
+let calendarMode =
+{
+  modeName: "calendar",
+  defaultState: "running",
+  update: () => updateCalendar(),
+  callbacks: {
+    running: {
+      BTN1_short: () => {},
+      BTN1_long: () => {},
+      BTN2_short: () => {},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => nextMode(),
+      BTN3_long: () => {}
+    }
+  }
+};
+
+modes.push(calendarMode);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Handle stopwatch mode
@@ -806,6 +904,9 @@ function mainInterval(watchState) {
 
   // After 10s
   if ((mainTicks % (10000 / MAIN_INTERVAL_MS)) == 0) {
+    if (currentMode == "calendar") {
+      updateCalendar();
+    }
     if (LOGGING_ENABLED) {
       logSystemState();
     }
