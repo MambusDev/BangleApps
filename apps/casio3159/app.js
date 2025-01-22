@@ -80,18 +80,26 @@ const STYLES = [
   {bg: BLACK, fg: LIGHT_GRAY},
 ];
 
-// Widgets
-const WIDGET_SHOW_TIME_MS = 3000;
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// Handle widgets
-////////////////////////////////////////////////////////////////////////////////////////////
-Bangle.loadWidgets();
-
-function clearWidgets() {
-  setColor(g, BLACK);
-  g.fillRect(0, 0, xmax, 24);
-}
+const TIMEZONES = [
+  { shortName: "UTC", offset: 0 },     // Coordinated Universal Time
+  { shortName: "NY", offset: -5 },    // New York (Eastern Time, no DST considered here)
+  { shortName: "LA", offset: -8 },    // Los Angeles (Pacific Time)
+  { shortName: "LDN", offset: 0 },    // London (GMT)
+  { shortName: "PAR", offset: 1 },    // Paris (CET)
+  { shortName: "BER", offset: 1 },    // Berlin (CET)
+  { shortName: "DEL", offset: 5.5 },  // Delhi (IST)
+  { shortName: "TKY", offset: 9 },    // Tokyo (JST)
+  { shortName: "SYD", offset: 11 },   // Sydney (AEDT)
+  { shortName: "RIO", offset: -3 },   // Rio de Janeiro (BRT)
+  { shortName: "JHB", offset: 2 },    // Johannesburg (SAST)
+  { shortName: "DXB", offset: 4 },    // Dubai (GST)
+  { shortName: "HKG", offset: 8 },    // Hong Kong (HKT)
+  { shortName: "SIN", offset: 8 },    // Singapore (SGT)
+  { shortName: "BKK", offset: 7 },    // Bangkok (ICT)
+  { shortName: "MEX", offset: -6 },   // Mexico City (CST)
+  { shortName: "CAI", offset: 2 },    // Cairo (EET)
+  { shortName: "IST", offset: 3 },    // Istanbul (TRT)
+];
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Read settings
@@ -122,6 +130,40 @@ function loadIcon(filename) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 // System parameter getters
 ////////////////////////////////////////////////////////////////////////////////////////////
+function getUtcTimeStrings(offset) {
+  // Get current offset to UTC
+  let now = new Date();
+  let systemOffset = now.getTimezoneOffset(); // in minutes
+  let targetOffset = offset * 60; // in minutes
+
+  let realOffset = systemOffset + targetOffset; // in minutes
+  let isNegative = (realOffset < 0);
+
+  let minutesOffset = Math.abs(realOffset) % 60;
+  if (isNegative) minutesOffset = minutesOffset * -1;
+
+  let resultMinutes = now.getMinutes() + minutesOffset;
+  let hoursOverrun = 0;
+  if (resultMinutes < 0) {
+    hoursOverrun = -1;
+  } else if (resultMinutes >= 60) {
+    hoursOverrun = 1;
+  }
+  resultMinutes = Math.abs(resultMinutes) % 60;
+
+  let hoursOffset = Math.floor(Math.abs(realOffset / 60));
+  if (isNegative) hoursOffset = hoursOffset * -1;
+
+  let resultHours = (24 + now.getHours() + hoursOverrun + hoursOffset) % 24;
+
+  // Get UTC+X hours, minutes, and seconds
+  let hours = resultHours.toString().padStart(2, '0'); // Hours (0-23)
+  let minutes = resultMinutes.toString().padStart(2, '0'); // Minutes (0-59)
+  let seconds = now.getSeconds().toString().padStart(2, '0'); // Seconds (0-59)
+
+  return {hours: hours, minutes: minutes, seconds: seconds};
+}
+
 
 function getTimeStrings() {
   // Get the current date and time
@@ -537,6 +579,21 @@ function updateClock() {
   renderedWatchState.textBox.text = time.day + "." + time.month.padStart(2, ' ');
 }
 
+// Update for clock mode
+function updateWorldTime(tz) {
+  let utcTime = getUtcTimeStrings(tz.offset);
+
+  renderedWatchState.cw = false;
+  renderedWatchState.dividers.colon = true;
+  renderedWatchState.dividers.dot = false;
+  renderedWatchState.dividers.smallDot = false;
+  renderedWatchState.upperDigits.value = utcTime.hours;
+  renderedWatchState.middleDigits.value = utcTime.minutes;
+  renderedWatchState.lowerDigits.value = utcTime.seconds;
+  renderedWatchState.textField.text = "WT";
+  renderedWatchState.textBox.text = tz.shortName;
+}
+
 // Update for calendar mode
 function updateCalendar() {
   let time = getTimeStrings();
@@ -682,6 +739,13 @@ function initializeLoadedValues() {
     }
     setStyle(currentStyle);
   }
+  if ("currentTimeZone" in data) {
+    currentTimeZone = data.currentTimeZone;
+    if (currentTimeZone >= TIMEZONES.length) {
+      // Corrupt data
+      currentTimeZone = 0;
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -735,7 +799,7 @@ let clockMode =
     running: {
       BTN1_short: () => {nextStyle(); saveValue("currentStyle", currentStyle); renderAll(renderedWatchState, showHighlighted);},
       BTN1_long: () => {},
-      BTN2_short: () => {Bangle.drawWidgets(); setTimeout( () => clearWidgets(), WIDGET_SHOW_TIME_MS);},
+      BTN2_short: () => {},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => nextMode(),
       BTN3_long: () => {}
@@ -744,6 +808,34 @@ let clockMode =
 };
 
 modes.push(clockMode);
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Handle world time mode
+////////////////////////////////////////////////////////////////////////////////////////////
+let currentTimeZone = 0; // UTC
+
+function nextTimeZone() {
+  currentTimeZone = (currentTimeZone + 1) % TIMEZONES.length;
+}
+
+let worldTimeMode =
+{
+  modeName: "worldTime",
+  defaultState: "running",
+  update: () => updateWorldTime(TIMEZONES[currentTimeZone]),
+  callbacks: {
+    running: {
+      BTN1_short: () => {nextTimeZone(); updateWorldTime(TIMEZONES[currentTimeZone]); renderAll(renderedWatchState, showHighlighted); saveValue("currentTimeZone", currentTimeZone);},
+      BTN1_long: () => {},
+      BTN2_short: () => {},
+      BTN2_long: () => Bangle.showLauncher(),
+      BTN3_short: () => nextMode(),
+      BTN3_long: () => {}
+    }
+  }
+};
+
+modes.push(worldTimeMode);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Handle calendar mode
@@ -950,6 +1042,8 @@ function mainInterval(watchState) {
   if ((mainTicks % (1000 / MAIN_INTERVAL_MS)) == 0) {
     if (currentMode == "clock") {
       updateClock();
+    } else if (currentMode == "worldTime") {
+      updateWorldTime(TIMEZONES[currentTimeZone]);
     } else if (currentMode == "timer") {
       if (currentModeState == "running") {
         decTimerValue();
