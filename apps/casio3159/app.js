@@ -238,6 +238,24 @@ function setBgColor(g, color) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+// Widgets
+////////////////////////////////////////////////////////////////////////////////////////////
+function hideWidgets() {
+  setColor(g, BLACK);
+  g.fillRect(0, 0, xmax, 24);
+  g.setClipRect(0, 25, xmax, ymax);  // Disallow drawing to widget area
+}
+
+function showWidgets(timeout) {
+  g.setClipRect(); // Re-allow drawing to widget area
+  Bangle.loadWidgets(); // lazy intialization
+  Bangle.drawWidgets();
+  if (timeout > 0) {
+    setTimeout(() => hideWidgets(), timeout);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // Drawing functions
 ////////////////////////////////////////////////////////////////////////////////////////////
 function drawSmallDot() {
@@ -799,7 +817,7 @@ let clockMode =
     running: {
       BTN1_short: () => {nextStyle(); saveValue("currentStyle", currentStyle); renderAll(renderedWatchState, showHighlighted);},
       BTN1_long: () => {},
-      BTN2_short: () => {},
+      BTN2_short: () => {showWidgets(5000);},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => nextMode(),
       BTN3_long: () => {}
@@ -1031,6 +1049,7 @@ initializeLoadedValues();
 updateSystemStatus();
 getUpdate(currentMode)();
 renderAll(renderedWatchState, showHighlighted);
+showWidgets(5000);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Clock & Rendering intervals and events
@@ -1092,6 +1111,7 @@ Bangle.on('lcdPower',on =>{
     updateSystemStatus();
     getUpdate(currentMode);
     renderAll(renderedWatchState, showHighlighted);
+    showWidgets(5000);
   }
 });
 

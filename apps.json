@@ -14,6 +14,30 @@
     ]
   },
   {
+  "id": "casiostyle",
+  "name": "Casio Style Library",
+  "shortName": "Casio Style",
+  "version": "0.01",
+  "description": "Casio Style Library",
+  "icon": "app.png",
+  "tags": "clock,library,casio", 
+  "type": "library", 
+  "dependencies": { "setting": "app", "alarm": "app" },
+  "screenshots": [{ "url": "screenshot.png" }],
+  "supports": ["BANGLEJS"],
+  "allow_emulator": true,
+  "storage": [
+      { "name": "casiostyle", "url": "app.js", "src": true },
+      { "name": "casio.img", "url": "app-icon.js", "evaluate": true },
+      { "name": "bell.icon", "url": "bell.icon" },
+      { "name": "beep.icon", "url": "beep.icon" },
+      { "name": "muted.icon", "url": "muted.icon" },
+      { "name": "bt_en.icon", "url": "bt_en.icon" },
+      { "name": "bt_con.icon", "url": "bt_con.icon" },
+      { "name": "charging.icon", "url": "charging.icon" }
+    ]
+  },
+  {
     "id": "casio3159",
     "name": "Casio 3159",
     "shortName":"Casio 3159",
@@ -27,7 +51,7 @@
     "supports": ["BANGLEJS"],
     "allow_emulator": true,
     "storage": [
-      {"name":"casio.app.js","url":"app.js","src": true},
+      {"name":"casio/modes/clock.js","url":"casio.clock.js","src": true},
       {"name":"casio.img","url":"app-icon.js","evaluate":true},
       {"name":"bell.icon","url":"bell.icon"},
       {"name":"beep.icon","url":"beep.icon"},
