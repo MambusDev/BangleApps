@@ -62,6 +62,8 @@ const LANGUAGES = {
     GERMAN: "German"
 };
 
+const WIDGET_SHOW_TIME_MS = 2000;
+
 let currentLanguage = LANGUAGES.GERMAN;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -612,7 +614,7 @@ exports.initCasio = function(modeObj) {
   currentMode.update();
   initializeStyle();
   renderAll(renderedWatchState(), showHighlighted);
-  showWidgets(5000);
+  showWidgets(WIDGET_SHOW_TIME_MS);
   mainTimer = setInterval(() => mainInterval(renderedWatchState()), MAIN_INTERVAL_MS);
 
   // Initial rendering on turning on LCD
@@ -621,7 +623,7 @@ exports.initCasio = function(modeObj) {
       updateSystemStatus();
       currentMode.update();
       renderAll(renderedWatchState(), showHighlighted);
-      showWidgets(5000);
+      showWidgets(WIDGET_SHOW_TIME_MS);
     }
   });
 
