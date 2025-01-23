@@ -28,12 +28,6 @@ const LONG_PRESSED_TIME_MS = 750;
 const BTN_BEEP_TIME_MS = 80;
 const BTN_BEEP_FREQ_HZ = 6000;
 
-// Alarm sounds
-const ALARM_BUZZ_COUNT = 3;
-const ALARM_BUZZ_TIME_MS = 250;
-const ALARM_BUZZ_PAUSE_MS = 1000;
-const ALARM_BEEP_FREQ_HZ = 4000;
-
 // Battery
 const BATTERY_HIGH = 2;
 const BATTERY_MEDIUM = 1;
@@ -44,6 +38,31 @@ const MAIN_INTERVAL_MS = 250;
 
 // Save state
 const SAVE_FILE = "casiostate.json";
+
+// Colors
+const BLACK = {r:0,g:0,b:0};
+const LIGHT_GRAY = {r:0.9,g:1,b:0.9};
+const BLUE = {r:0.3,g:0.9,b:1};
+const TURKISH = {r:0.1,g:1,b:0.8};
+const YELLOW = {r:1,g:0.8,b:0.1};
+const RED = {r:1,g:0.2,b:0.5};
+
+const STYLES = [
+  {bg: LIGHT_GRAY, fg: BLACK},
+  {bg: BLUE, fg: BLACK},
+  {bg: TURKISH, fg: BLACK},
+  {bg: YELLOW, fg: BLACK},
+  {bg: RED, fg: BLACK},
+  {bg: BLACK, fg: LIGHT_GRAY},
+];
+
+// Language setting
+const LANGUAGES = {
+    ENGLISH: "English",
+    GERMAN: "German"
+};
+
+let currentLanguage = LANGUAGES.GERMAN;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Read settings
@@ -106,6 +125,22 @@ function setColor(g, color) {
 function setBgColor(g, color) {
   g.setBgColor(color.r, color.g, color.b);
   return g;
+}
+
+function setStyle(style) {
+  fgColor=style.fg;
+  bgColor=style.bg;
+}
+
+function initializeStyle() {
+  let data = loadSavedValues();
+
+  // Check if the key exists before initializing
+  if ("style" in data) {
+    setStyle(data.style);
+  } else {
+    setStyle(STYLES[0]);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +247,7 @@ function drawTextBox(text) {
   setBgColor(g, bgColor);
   g.setFont("8x12", 4);
   g.setFontAlign(1, -1, 0); // right, top, normal
-  g.drawString(text, xmax - 1.5 * margin.right, ymin + 1.25 * margin.top, true);
+  g.drawString(text.padStart(4, ' '), xmax - 1.5 * margin.right, ymin + 1.25 * margin.top, true);
 }
 
 function clearBatteryStatus() {
@@ -321,7 +356,7 @@ function drawCalendarWeek(clear) {
 
   // Language
   cwString = "CW";
-  if (language == "German") {
+  if (currentLanguage == "German") {
     cwString = "KW";
   }
 
@@ -398,7 +433,7 @@ function renderAll(watchState, showHighlighted) {
 let showHighlighted = true;
 
 // State to be rendered
-let renderedWatchState = {
+let modeWatchState = {
   cw: false,
   dividers: {
     colon: true,
@@ -424,7 +459,10 @@ let renderedWatchState = {
   textBox: {
     text: " 1. 1",
     highlighted: false
-  },
+  }
+};
+
+let systemWatchState = {
   bluetooth: {
     enabled: false,
     connected: false
@@ -435,53 +473,77 @@ let renderedWatchState = {
   battery: BATTERY_HIGH
 };
 
+// Combine to states for rendering functions
+function renderedWatchState() {
+  return Object.assign({}, modeWatchState, systemWatchState);
+}
+
+// General system updates
+function updateSystemStatus() {
+  systemWatchState.battery = getBatteryLevel();
+  systemWatchState.muted = !setting("beep");
+  systemWatchState.bluetooth.enabled = setting("ble");
+  if (systemWatchState.bluetooth.enabled) {
+    systemWatchState.bluetooth.connected = NRF.getSecurityStatus().connected;
+  }
+  systemWatchState.alarm = alarmIsSet();
+  systemWatchState.charging = Bangle.isCharging();
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Modes
 ////////////////////////////////////////////////////////////////////////////////////////////
-const modes = [];
-
-function getIndexByMode(modeName) {
-  return modes.findIndex(m => m.modeName === modeName);
-}
-
-function getModeByIndex(index) {
-  return modes[index].modeName;
-}
-
-function getDefaultState(mode) {
-  return modes.find(m => m.modeName === mode).defaultState;
-}
-
-function getCallbacks(mode) {
-  return modes.find(m => m.modeName === mode).callbacks;
-}
-
-function getUpdate(mode) {
-  return modes.find(m => m.modeName === mode).update;
-}
-
-let currentMode; // Current active mode
+let currentMode; // Current mode
 let currentModeState; // Current mode's state
-let mainTimer; // Rendering interval timer
-let loggingEnabled = false; // Enables logging
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// API
+// Widgets
 ////////////////////////////////////////////////////////////////////////////////////////////
-exports.hideWidgets = function() {
+function hideWidgets() {
   setColor(g, BLACK);
   g.fillRect(0, 0, xmax, 24);
   g.setClipRect(0, 25, xmax, ymax);  // Disallow drawing to widget area
-};
+}
 
-exports.showWidgets = function(timeout) {
+function showWidgets(timeout) {
   g.setClipRect(); // Re-allow drawing to widget area
-  Bangle.loadWidgets(); // lazy intialization
   Bangle.drawWidgets();
   if (timeout > 0) {
     setTimeout(() => hideWidgets(), timeout);
   }
-};
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Savefile
+////////////////////////////////////////////////////////////////////////////////////////////
+function saveValue(key, value) {
+  let data = loadSavedValues(); // Load existing data
+  data[key] = value; // Add or update the key-value pair
+  storage.write(SAVE_FILE, JSON.stringify(data));
+}
+
+function loadSavedValues() {
+  const fileContents = storage.read(SAVE_FILE);
+  if (fileContents) {
+    try {
+      const data = JSON.parse(fileContents);
+      return data;
+    } catch (error) {
+    }
+  }
+  return {}; // Return an empty object if the file doesn't exist or is invalid
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// API
+////////////////////////////////////////////////////////////////////////////////////////////
+exports.STYLES = STYLES;
+
+exports.LANGUAGES = LANGUAGES;
+
+exports.hideWidgets = hideWidgets;
+
+exports.showWidgets = showWidgets;
 
 exports.loadNextMode = function() {
   // List all scripts in the "casio/modes/" namespace
@@ -491,7 +553,7 @@ exports.loadNextMode = function() {
   scripts.sort();
 
   // Find the index of the current script
-  let index = scripts.indexOf(modes[0].src);
+  let index = scripts.indexOf(currentMode.src);
 
   // Calculate the next script, wrapping around if at the end
   let nextIndex = (index + 1) % scripts.length;
@@ -500,13 +562,28 @@ exports.loadNextMode = function() {
   load(scripts[nextIndex]);
 };
 
+exports.setLanguage = function(language) {
+  if (Object.values(LANGUAGES).includes(lanlanguageg)) {
+    currentLanguage = language;
+  }
+};
+
+exports.changeState = function(state) {
+  currentModeState = state;
+};
+
 exports.setStyle = function(style) {
-  fgColor=style.fg;
-  bgColor=style.bg;
+  setStyle(style);
+  saveValue("style", style);
+  renderAll(renderedWatchState(), showHighlighted);
+};
+
+exports.getStyle = function() {
+  return {bg: bgColor, fg: fgColor};
 };
 
 exports.submitWatchStateToRender = function(watchState) {
-  renderedWatchState = watchState;
+  modeWatchState = watchState;
 };
 
 exports.enableLogging = function() {
@@ -517,10 +594,14 @@ exports.disableLogging = function() {
   loggingEnabled = false;
 };
 
+let mainTimer; // Rendering interval timer
+let loggingEnabled = false; // Enables logging
+
 exports.initCasio = function(modeObj) {
-  modes.push(modeObj);
-  currentMode = modeObj.modeName;
-  currentModeState = modeObj.defaultState;
+  currentMode = modeObj;
+  currentModeState = currentMode.defaultState;
+  
+  Bangle.loadWidgets();
 
   // Reset the state of the graphics library
   g.reset();
@@ -528,17 +609,18 @@ exports.initCasio = function(modeObj) {
   g.clear();
   // Initial rendering
   updateSystemStatus();
-  getUpdate(currentMode)();
-  renderAll(renderedWatchState, showHighlighted);
+  currentMode.update();
+  initializeStyle();
+  renderAll(renderedWatchState(), showHighlighted);
   showWidgets(5000);
-  mainTimer = setInterval(() => mainInterval(renderedWatchState), MAIN_INTERVAL_MS);
+  mainTimer = setInterval(() => mainInterval(renderedWatchState()), MAIN_INTERVAL_MS);
 
   // Initial rendering on turning on LCD
   Bangle.on('lcdPower',on =>{
     if (on) {
       updateSystemStatus();
-      getUpdate(currentMode);
-      renderAll(renderedWatchState, showHighlighted);
+      currentMode.update();
+      renderAll(renderedWatchState(), showHighlighted);
       showWidgets(5000);
     }
   });
@@ -572,23 +654,9 @@ exports.initCasio = function(modeObj) {
   }, BTN3, { edge: "falling", repeat: true, debounce: 50 });
 };
 
-exports.saveValue = function(key, value) {
-  let data = loadAllValues(); // Load existing data
-  data[key] = value; // Add or update the key-value pair
-  storage.write(SAVE_FILE, JSON.stringify(data));
-};
+exports.saveValue = saveValue;
 
-exports.loadSavedValues = function() {
-  const fileContents = storage.read(SAVE_FILE);
-  if (fileContents) {
-    try {
-      const data = JSON.parse(fileContents);
-      return data;
-    } catch (error) {
-    }
-  }
-  return {}; // Return an empty object if the file doesn't exist or is invalid
-};
+exports.loadSavedValues = loadSavedValues;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Logging
@@ -670,32 +738,32 @@ function mainInterval(watchState) {
 // Handle button presses
 function onLongPressedBTN2() {
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN2_long();
+  currentMode.callbacks[currentModeState].BTN2_long();
 }
 
 function onShortPressedBTN2() {
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN2_short();
+  currentMode.callbacks[currentModeState].BTN2_short();
 }
 
 function onLongPressedBTN1() {
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN1_long();
+  currentMode.callbacks[currentModeState].BTN1_long();
 }
 
 function onShortPressedBTN1() {
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN1_short();
+  currentMode.callbacks[currentModeState].BTN1_short();
 }
 
 function onLongPressedBTN3() {
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN3_long();
+  currentMode.callbacks[currentModeState].BTN3_long();
 }
 
 function onShortPressedBTN3() {
   if (setting("beep")) Bangle.beep(BTN_BEEP_TIME_MS, BTN_BEEP_FREQ_HZ);
-  getCallbacks(currentMode)[currentModeState].BTN3_short();
+  currentMode.callbacks[currentModeState].BTN3_short();
 }
 
 let btnState = [{longPressTimer: null, isLongPress: false},{longPressTimer: null, isLongPress: false},{longPressTimer: null, isLongPress: false}];

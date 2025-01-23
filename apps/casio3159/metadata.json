@@ -1,4 +1,4 @@
-   {
+  {
     "id": "casio3159",
     "name": "Casio 3159",
     "shortName":"Casio 3159",
@@ -12,13 +12,11 @@
     "supports": ["BANGLEJS"],
     "allow_emulator": true,
     "storage": [
-      {"name":"casio/modes/clock.js","url":"app.clock.js","src": true},
-      {"name":"casio.img","url":"app-icon.js","evaluate":true},
-      {"name":"bell.icon","url":"bell.icon"},
-      {"name":"beep.icon","url":"beep.icon"},
-      {"name":"muted.icon","url":"muted.icon"},
-      {"name":"bt_en.icon","url":"bt_en.icon"},
-      {"name":"bt_con.icon","url":"bt_con.icon"},
-      {"name":"charging.icon","url":"charging.icon"}
+      {"name":"casio/modes/clock.js","url":"casio.clock.js","src": true},
+      {"name":"casio/modes/timer.js","url":"casio.timer.js"},
+      {"name":"casio/modes/worldtime.js","url":"casio.worldtime.js"},
+      {"name":"casio/modes/stopwatch.js","url":"casio.stopwatch.js"},
+      {"name":"casio/modes/calendar.js","url":"casio.calendar.js"},
+      {"name":"casio.img","url":"app-icon.js","evaluate":true}
     ]
   }
