@@ -61,7 +61,9 @@ function getUtcTimeStrings(offset) {
   let minutes = resultMinutes.toString().padStart(2, '0'); // Minutes (0-59)
   let seconds = now.getSeconds().toString().padStart(2, '0'); // Seconds (0-59)
 
-  return {hours: hours, minutes: minutes, seconds: seconds};
+  let timestamp = Math.floor(now / 1000);
+
+  return {hours: hours, minutes: minutes, seconds: seconds, timestamp: timestamp};
 }
 
 // State to be rendered
@@ -91,6 +93,10 @@ let worldClockWatchState = {
   textBox: {
     text: " 1. 1",
     highlighted: false
+  },
+  textBanner: {
+    text: "",
+    highlighted: false
   }
 };
 
@@ -108,6 +114,7 @@ function updateWorldTime(tz) {
   worldClockWatchState.lowerDigits.value = utcTime.seconds;
   worldClockWatchState.textField.text = "WT";
   worldClockWatchState.textBox.text = tz.shortName;
+  worldClockWatchState.textBanner.text = "Unix Time: " + utcTime.timestamp;
   // Submit for rendering
   casio.submitWatchStateToRender(worldClockWatchState);
 }

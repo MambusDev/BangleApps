@@ -35,6 +35,10 @@ let stopwatchWatchState = {
   textBox: {
     text: " 1. 1",
     highlighted: false
+  },
+  textBanner: {
+    text: "",
+    highlighted: false
   }
 };
 

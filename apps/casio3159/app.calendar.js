@@ -3,6 +3,32 @@ const casio = require("casiostyle");
 const language = casio.LANGUAGES.GERMAN;
 const LOGGING_ENABLED = false;
 
+function getTimeStrings() {
+  // Get the current date and time
+  let now = new Date();
+
+  // Extract parts of the date and time
+  let hours = now.getHours().toString().padStart(2, '0'); // Hours (0-23)
+  let minutes = now.getMinutes().toString().padStart(2, '0'); // Minutes (0-59)
+  let seconds = now.getSeconds().toString().padStart(2, '0'); // Seconds (0-59)
+  let day = now.getDate().toString(); // Day of the month (1-31)
+  let month = (now.getMonth() + 1).toString(); // Month (1-12)
+  let weekday = now.getDay(); // Weekday (0-6, Sunday = 0)
+  let year = now.getFullYear().toString();
+
+  // Convert weekday to a two-character string
+  let weekdays_english = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+  let weekdays_german = ["SO", "MO", "DI", "MI", "DO", "FR", "SA"];
+
+  if (language == "German") {
+    weekday = weekdays_german[weekday];
+  } else {
+    weekday = weekdays_english[weekday];
+  }
+
+  return {year: year, hours: hours, minutes: minutes, seconds: seconds, day: day, month: month, weekday: weekday};
+}
+
 // State to be rendered
 let calendarWatchState = {
   cw: false,
@@ -29,6 +55,10 @@ let calendarWatchState = {
   },
   textBox: {
     text: " 1. 1",
+    highlighted: false
+  },
+  textBanner: {
+    text: "",
     highlighted: false
   }
 };

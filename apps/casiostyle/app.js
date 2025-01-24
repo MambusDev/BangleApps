@@ -67,6 +67,10 @@ const WIDGET_SHOW_TIME_MS = 2000;
 
 let currentLanguage = LANGUAGES.GERMAN;
 
+// Icons
+const ICON_SIZE = 48;
+const ICON_SCALE = 0.4;
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Read settings
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +207,6 @@ function drawBatteryLevels() {
   g.setFont("Teletext5x9Ascii", 2);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
 
-
   y = ymax - ymax / 10 - margin.bottom;
   x_low = battery_status.x + 0.5 * battery_status.width / 3;
   x_mid = battery_status.x + 1.5 * battery_status.width / 3;
@@ -279,72 +282,74 @@ function drawBatteryStatus(battery) {
   drawBatteryBar(battery);
 }
 
-function drawBtStatus(bt_enabled, bt_connected) {
+function clearIcon(slot) {
+  setColor(g, bgColor);
+
+  x1 = xmin + 2 * margin.left + slot * (ICON_SIZE * ICON_SCALE + margin.left);
+  y1 = ymax - ymax / 10 + margin.bottom;
+  x2 = x1 + ICON_SIZE * ICON_SCALE; // Icon size = 48x48
+  y2 = y1 + ICON_SIZE * ICON_SCALE; // Icon size = 48x48
+
+  g.fillRect(x1, y1, x2, y2);
+}
+
+function drawIcon(icon, slot) {
   setColor(g, fgColor);
   setBgColor(g, fgColor);
 
+  x1 = xmin + 2 * margin.left + slot * (ICON_SIZE * ICON_SCALE + margin.left);
+  y1 = ymax - ymax / 10 + margin.bottom;
+
+  g.drawImage(icon, x1, y1, {scale:ICON_SCALE});
+
+}
+
+function drawBtStatus(bt_enabled, bt_connected) {
+  const slot = 0;
   if (bt_enabled) {
     if (bt_connected) {
       bt_con_icon = loadIcon("bt_con.icon");
-      g.drawImage(bt_con_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
+      drawIcon(bt_con_icon, slot);
     } else {
       bt_icon = loadIcon("bt_en.icon");
-      g.drawImage(bt_icon, xmin + margin.left, ymin + 1.5 * margin.top, {scale:0.4});
+      drawIcon(bt_icon, slot);
     }
   } else {
-    setColor(g, bgColor);
-    x1 = xmin + margin.left;
-    y1 = ymin + 1.5 * margin.top;
-    x2 = x1 + 48 * 0.4; // Icon size = 48x48
-    y2 = y1 + 48 * 0.4; // Icon size = 48x48
-    g.fillRect(x1, y1, x2, y2);
+    clearIcon(slot);
   }
 }
 
 function drawBeepStatus(muted) {
-  setColor(g, fgColor);
-  setBgColor(g, fgColor);
+  const slot = 1;
 
   if (!muted) {
     beep_icon = loadIcon("beep.icon");
-    g.drawImage(beep_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
+    drawIcon(beep_icon, slot);
   } else {
     mute_icon = loadIcon("muted.icon");
-    g.drawImage(mute_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top, {scale:0.4});
-  }
-}
-
-function drawChargingStatus(charging) {
-  setColor(g, fgColor);
-  setBgColor(g, fgColor);
-
-  if (charging) {
-    charging_icon = loadIcon("charging.icon");
-    g.drawImage(charging_icon, xmin + margin.left + 24, ymin + 1.5 * margin.top + 24, {scale:0.4});
-  } else {
-    setColor(g, bgColor);
-    x1 = xmin + margin.left + 24;
-    y1 = ymin + 1.5 * margin.top + 24;
-    x2 = x1 + 48 * 0.4; // Icon size = 48x48
-    y2 = y1 + 48 * 0.4; // Icon size = 48x48
-    g.fillRect(x1, y1, x2, y2);
+    drawIcon(mute_icon, slot);
   }
 }
 
 function drawAlarmStatus(alarm) {
-  setColor(g, fgColor);
-  setBgColor(g, fgColor);
+  const slot = 2;
 
   if (alarm) {
     bell_icon = loadIcon("bell.icon");
-    g.drawImage(bell_icon, xmin + margin.left, ymin + 1.5 * margin.top + 24, {scale:0.4});
+    drawIcon(bell_icon, slot);
   } else {
-    setColor(g, bgColor);
-    x1 = xmin + margin.left;
-    y1 = ymin + 1.5 * margin.top + 24;
-    x2 = x1 + 48 * 0.4; // Icon size = 48x48
-    y2 = y1 + 48 * 0.4; // Icon size = 48x48
-    g.fillRect(x1, y1, x2, y2);
+    clearIcon(slot);
+  }
+}
+
+function drawChargingStatus(charging) {
+  const slot = 3;
+
+  if (charging) {
+    charging_icon = loadIcon("charging.icon");
+    drawIcon(charging_icon, slot);
+  } else {
+    clearIcon(slot);
   }
 }
 
