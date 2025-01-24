@@ -59,7 +59,6 @@ function getStyleIndex(styles, style) {
 }
 
 function setStyle(index) {
-  console.info(index);
   casio.setStyle(casio.STYLES[index]);
 }
 

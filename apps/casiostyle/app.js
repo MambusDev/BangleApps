@@ -62,6 +62,7 @@ const LANGUAGES = {
     GERMAN: "German"
 };
 
+const SHOW_WIDGETS = false;
 const WIDGET_SHOW_TIME_MS = 2000;
 
 let currentLanguage = LANGUAGES.GERMAN;
@@ -602,8 +603,8 @@ let loggingEnabled = false; // Enables logging
 exports.initCasio = function(modeObj) {
   currentMode = modeObj;
   currentModeState = currentMode.defaultState;
-  
-  Bangle.loadWidgets();
+
+  if (SHOW_WIDGETS) Bangle.loadWidgets();
 
   // Reset the state of the graphics library
   g.reset();
@@ -614,7 +615,7 @@ exports.initCasio = function(modeObj) {
   currentMode.update();
   initializeStyle();
   renderAll(renderedWatchState(), showHighlighted);
-  showWidgets(WIDGET_SHOW_TIME_MS);
+  if (SHOW_WIDGETS) showWidgets(WIDGET_SHOW_TIME_MS);
   mainTimer = setInterval(() => mainInterval(renderedWatchState()), MAIN_INTERVAL_MS);
 
   // Initial rendering on turning on LCD
@@ -623,7 +624,7 @@ exports.initCasio = function(modeObj) {
       updateSystemStatus();
       currentMode.update();
       renderAll(renderedWatchState(), showHighlighted);
-      showWidgets(WIDGET_SHOW_TIME_MS);
+      if (SHOW_WIDGETS) showWidgets(WIDGET_SHOW_TIME_MS);
     }
   });
 
