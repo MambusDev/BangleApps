@@ -256,6 +256,14 @@ function drawTextBox(text) {
   g.drawString(text.padStart(4, ' '), xmax - 1.5 * margin.right, ymin + 1.25 * margin.top, true);
 }
 
+function drawTextBanner(text) {
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
+  g.setFont("8x12", 2);
+  g.setFontAlign(-1, -1, 0); // left, top, normal
+  g.drawString(text.padEnd(20, ' '), xmin + margin.left, ymin + margin.top + ymax / 4 + 4, true);
+}
+
 function clearBatteryStatus() {
   let battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
 
@@ -404,11 +412,16 @@ function renderSlowContents(watchState, showHighlighted) {
     textField = watchState.textField.text;
   }
 
+  if ((watchState.textBanner.highlighted && showHighlighted) || !watchState.textBanner.highlighted) {
+    textBanner = watchState.textBanner.text;
+  }
+
   drawCalendarWeek(!watchState.cw);
   drawMiddleDigits(middleDigits);
   drawUpperDigits(upperDigits);
   drawTextField(textField);
   drawTextBox(textBox);
+  drawTextBanner(textBanner);
   drawBtStatus(watchState.bluetooth.enabled, watchState.bluetooth.connected);
   drawBeepStatus(watchState.muted);
   drawAlarmStatus(watchState.alarm);
@@ -466,6 +479,10 @@ let modeWatchState = {
   },
   textBox: {
     text: " 1. 1",
+    highlighted: false
+  },
+  textBanner: {
+    text: "",
     highlighted: false
   }
 };
@@ -591,7 +608,7 @@ exports.getStyle = function() {
 };
 
 exports.submitWatchStateToRender = function(watchState) {
-  modeWatchState = watchState;
+  modeWatchState = Object.assign(modeWatchState, watchState);
 };
 
 exports.enableLogging = function() {
