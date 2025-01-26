@@ -221,7 +221,7 @@ let timerMode =
       BTN2_short: () => {casio.saveValue("timerStartValue", timerStartValue); casio.changeState("idle"); timerWatchState.upperDigits.highlighted = false; timerWatchState.middleDigits.highlighted = false; timerWatchState.lowerDigits.highlighted = false;},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => {addTimerStartValue(-1); timerValue=timerStartValue; updateTimer(timerValue);},
-      BTN3_long: () => {addBigTimerStartValue(1); timerValue=timerStartValue; updateTimer(timerValue);}
+      BTN3_long: () => {addBigTimerStartValue(-1); timerValue=timerStartValue; updateTimer(timerValue);}
     }
   }
 };
