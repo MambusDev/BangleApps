@@ -4,7 +4,7 @@ const storage = require("Storage");
 const language = casio.LANGUAGES.GERMAN;
 
 // Alarm sounds
-const ALARM_BUZZ_COUNT = 3;
+const ALARM_BUZZ_COUNT = 2;
 const ALARM_BUZZ_TIME_MS = 250;
 const ALARM_BUZZ_PAUSE_MS = 1000;
 const ALARM_BEEP_FREQ_HZ = 4000;
@@ -137,6 +137,21 @@ function addTimerStartValue(add) {
   timerStartValue = Math.min(MAX_TIMER_START_VALUE , timerStartValue);
 }
 
+function addBigTimerStartValue(factor) {
+  let steps = Math.floor(timerStartValue / Math.abs(factor));
+
+  let add = 0;
+  if (factor < 0) {
+    add = (steps % 10) * factor;
+  } else {
+    add = (10 - (steps % 10)) * factor;
+  }
+
+  timerStartValue = timerStartValue + add;
+  timerStartValue = Math.max(0, timerStartValue);
+  timerStartValue = Math.min(MAX_TIMER_START_VALUE , timerStartValue);
+}
+
 function alarm() {
   var buzzCount = ALARM_BUZZ_COUNT;
   function buzz() {
@@ -186,27 +201,27 @@ let timerMode =
     },
     chg_hours: {
       BTN1_short: () => {addTimerStartValue(3600); timerValue=timerStartValue; updateTimer(timerValue);},
-      BTN1_long: () => {},
+      BTN1_long: () => {addBigTimerStartValue(3600); timerValue=timerStartValue; updateTimer(timerValue);},
       BTN2_short: () => {casio.changeState("chg_minutes"); timerWatchState.upperDigits.highlighted = false; timerWatchState.middleDigits.highlighted = true; timerWatchState.lowerDigits.highlighted = false;},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => {addTimerStartValue(-3600); timerValue=timerStartValue; updateTimer(timerValue);},
-      BTN3_long: () => {}
+      BTN3_long: () => {addBigTimerStartValue(-3600); timerValue=timerStartValue; updateTimer(timerValue);}
     },
     chg_minutes: {
       BTN1_short: () => {addTimerStartValue(60); timerValue=timerStartValue; updateTimer(timerValue);},
-      BTN1_long: () => {},
+      BTN1_long: () => {addBigTimerStartValue(60); timerValue=timerStartValue; updateTimer(timerValue);},
       BTN2_short: () => {casio.changeState("chg_seconds"); timerWatchState.upperDigits.highlighted = false; timerWatchState.middleDigits.highlighted = false; timerWatchState.lowerDigits.highlighted = true;},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => {addTimerStartValue(-60); timerValue=timerStartValue; updateTimer(timerValue);},
-      BTN3_long: () => {}
+      BTN3_long: () => {addBigTimerStartValue(-60); timerValue=timerStartValue; updateTimer(timerValue);}
     },
     chg_seconds: {
       BTN1_short: () => {addTimerStartValue(1); timerValue=timerStartValue; updateTimer(timerValue);},
-      BTN1_long: () => {},
+      BTN1_long: () => {addBigTimerStartValue(1); timerValue=timerStartValue; updateTimer(timerValue);},
       BTN2_short: () => {casio.saveValue("timerStartValue", timerStartValue); casio.changeState("idle"); timerWatchState.upperDigits.highlighted = false; timerWatchState.middleDigits.highlighted = false; timerWatchState.lowerDigits.highlighted = false;},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => {addTimerStartValue(-1); timerValue=timerStartValue; updateTimer(timerValue);},
-      BTN3_long: () => {}
+      BTN3_long: () => {addBigTimerStartValue(1); timerValue=timerStartValue; updateTimer(timerValue);}
     }
   }
 };
@@ -233,7 +248,6 @@ if (LOGGING_ENABLED) {
 } else {
   casio.disableLogging();
 }
-
 
 setInterval(() => updateTimer(timerValue), 1000);
 let timerTimer;
