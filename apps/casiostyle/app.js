@@ -282,7 +282,7 @@ function drawTextField(text) {
   setBgColor(g, bgColor);
   g.setFont("Teletext5x9Ascii", 5);
   g.setFontAlign(1, -1, 0); // right, top, normal
-  g.drawString(text, center.x - margin.right, ymin + 1.5 * margin.top, true);
+  g.drawString(text.padStart(4, ' '), center.x - margin.right, ymin + 1.5 * margin.top, true);
 }
 
 function drawTextBox(text) {
@@ -426,6 +426,17 @@ function renderUi(watchState) {
   drawBatteryStatus(watchState.battery);
 }
 
+function renderVerySlowContents(watchState) {
+  drawCalendarWeek(!watchState.cw);
+  drawBtStatus(watchState.bluetooth.enabled, watchState.bluetooth.connected);
+  drawBeepStatus(watchState.muted);
+  drawAlarmStatus(watchState.alarm);
+  drawChargingStatus(watchState.charging);
+  if (watchState.dividers.dot) drawDot();
+  if (watchState.dividers.smallDot) drawSmallDot();
+  if (watchState.dividers.colon) drawColon();
+}
+
 function renderSlowContents(watchState, showHighlighted) {
   upperDigits = "  ";
   middleDigits = "  ";
@@ -453,19 +464,12 @@ function renderSlowContents(watchState, showHighlighted) {
     textBanner = watchState.textBanner.text;
   }
 
-  drawCalendarWeek(!watchState.cw);
   drawMiddleDigits(middleDigits);
   drawUpperDigits(upperDigits);
   drawTextField(textField);
   drawTextBox(textBox);
   drawTextBanner(textBanner);
-  drawBtStatus(watchState.bluetooth.enabled, watchState.bluetooth.connected);
-  drawBeepStatus(watchState.muted);
-  drawAlarmStatus(watchState.alarm);
-  drawChargingStatus(watchState.charging);
-  if (watchState.dividers.dot) drawDot();
-  if (watchState.dividers.smallDot) drawSmallDot();
-  if (watchState.dividers.colon) drawColon();
+
 }
 
 function renderFastContents(watchState, showHighlighted) {
@@ -481,6 +485,7 @@ function renderFastContents(watchState, showHighlighted) {
 
 function renderAll(watchState, showHighlighted) {
   renderUi(watchState);
+  renderVerySlowContents(watchState);
   renderSlowContents(watchState, showHighlighted);
   renderFastContents(watchState, showHighlighted);
 }
@@ -773,6 +778,7 @@ function mainInterval(watchState) {
   // After 1000 ms
   if ((mainTicks % (1000 / MAIN_INTERVAL_MS)) == 0) {
     if (global.gc) global.gc();
+    renderVerySlowContents(watchState);
   }
 
   // After 10s
@@ -785,13 +791,13 @@ function mainInterval(watchState) {
   // After 250 ms
   if ((mainTicks % (250 / MAIN_INTERVAL_MS)) == 0) {
     updateSystemStatus();
-    renderSlowContents(watchState, showHighlighted);
     renderFastContents(watchState, showHighlighted);
   }
 
   // After 500 ms
   if ((mainTicks % (500 / MAIN_INTERVAL_MS)) == 0) {
     showHighlighted = !showHighlighted; // 1 second blinking
+    renderSlowContents(watchState, showHighlighted);
   }
 
   // Each call
@@ -843,7 +849,7 @@ function handleRising(btn) {
   btnState[btn].longPressTimer = setTimeout(() => {
     btnState[btn].isLongPress = true; // Mark as long press
     btnCallback[btn].long();  // Trigger long press action
-  }, LONG_PRESSED_TIME_MS); // 3 seconds
+  }, LONG_PRESSED_TIME_MS);
 }
 
 function handleFalling(btn) {
