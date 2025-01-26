@@ -167,3 +167,13 @@ if (LOGGING_ENABLED) {
   casio.disableLogging();
 }
 let worldClockInterval = setInterval(() => {updateWorldTime(TIMEZONES[currentTimeZone]);}, 1000);
+
+// Initial rendering on turning on LCD
+Bangle.on('lcdPower',on =>{
+  if (on) {
+    worldClockInterval = setInterval(() => {updateWorldTime(TIMEZONES[currentTimeZone]);}, 1000);
+  } else {
+    // Save energy
+    clearInterval(worldClockInterval);
+  }
+});

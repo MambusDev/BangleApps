@@ -153,3 +153,13 @@ if (LOGGING_ENABLED) {
   casio.disableLogging();
 }
 let clockInterval = setInterval(() => {updateClock();}, 1000);
+
+// Initial rendering on turning on LCD
+Bangle.on('lcdPower',on =>{
+  if (on) {
+    clockInterval = setInterval(() => {updateClock();}, 1000);
+  } else {
+    // Save energy
+    clearInterval(clockInterval);
+  }
+});

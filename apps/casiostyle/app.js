@@ -42,6 +42,7 @@ const SAVE_FILE = "casiostate.json";
 // Colors
 const BLACK = {r:0,g:0,b:0};
 const LIGHT_GRAY = {r:0.9,g:1,b:0.9};
+const DARK_GRAY = {r:0.4,g:0.5,b:0.4};
 const BLUE = {r:0.3,g:0.9,b:1};
 const TURKISH = {r:0.1,g:1,b:0.8};
 const YELLOW = {r:1,g:0.8,b:0.1};
@@ -137,6 +138,16 @@ function setBgColor(g, color) {
 function setStyle(style) {
   fgColor=style.fg;
   bgColor=style.bg;
+  enforceRedrawDigits();
+}
+
+function getAccentColor(bgColor, fgColor) {
+  const weight = 0.09;
+  let interpolatedColor = {r: 0, g: 0, b: 0};
+  interpolatedColor.r = bgColor.r + (fgColor.r - bgColor.r) * weight;
+  interpolatedColor.g = bgColor.g + (fgColor.g - bgColor.g) * weight;
+  interpolatedColor.b = bgColor.b + (fgColor.b - bgColor.b) * weight;
+  return interpolatedColor;
 }
 
 function initializeStyle() {
@@ -161,20 +172,37 @@ function drawSmallDot() {
   g.drawString(".", xmax - margin.right - 42, ymax - margin.bottom - 2.5 * ymax / 10, true);
 }
 
+// Only update display if values change to avoid flickering
+let lastDrawnDigits = { lower: "", middle: "", upper: "" };
+
+function enforceRedrawDigits() {
+  lastDrawnDigits = { lower: "", middle: "", upper: "" };
+}
+
 function drawLowerDigits(digits) {
-  setColor(g, fgColor);
+  if (digits == lastDrawnDigits.lower) return;
+  lastDrawnDigits.lower = digits;
   setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 3);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
-  g.drawString(digits, xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
+
+  setColor(g, getAccentColor(bgColor, fgColor));
+  g.drawString("88", xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
+  setColor(g, fgColor);
+  g.drawString(digits, xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, false);
 }
 
 function drawUpperDigits(digits) {
-  setColor(g, fgColor);
+  if (digits == lastDrawnDigits.upper) return;
+  lastDrawnDigits.upper = digits;
   setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
-  g.drawString(digits, xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, true);
+
+  setColor(g, getAccentColor(bgColor, fgColor));
+  g.drawString("88", xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, true);
+  setColor(g, fgColor);
+  g.drawString(digits, xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, false);
 }
 
 function drawColon() {
@@ -194,11 +222,16 @@ function drawDot() {
 }
 
 function drawMiddleDigits(digits) {
-  setColor(g, fgColor);
+  if (digits == lastDrawnDigits.middle) return;
+  lastDrawnDigits.middle = digits;
   setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
-  g.drawString(digits, xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, true); // 105 = three times font width
+
+  setColor(g, getAccentColor(bgColor, fgColor));
+  g.drawString("88", xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, true); // 105 = three times font width
+  setColor(g, fgColor);
+  g.drawString(digits, xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, false); // 105 = three times font width
 }
 
 function drawBatteryLevels() {
@@ -237,6 +270,10 @@ function drawStaticElements() {
   g.drawLine(center.x, ymax - ymax / 10, center.x, ymax - margin.bottom);
   g.drawLine(center.x - 1, ymax - ymax / 10, center.x - 1, ymax - margin.bottom); // Line width 2
 
+  // Text banner background
+  setColor(g, getAccentColor(bgColor, fgColor));
+  g.fillRect(xmin, ymin + margin.top + ymax / 4 + 4, xmax, ymin + margin.top + ymax / 4 + 30);
+
   drawBatteryLevels();
 }
 
@@ -258,7 +295,7 @@ function drawTextBox(text) {
 
 function drawTextBanner(text) {
   setColor(g, fgColor);
-  setBgColor(g, bgColor);
+  setBgColor(g, getAccentColor(bgColor, fgColor));
   g.setFont("8x12", 2);
   g.setFontAlign(-1, -1, 0); // left, top, normal
   g.drawString(text.padEnd(20, ' '), xmin + margin.left, ymin + margin.top + ymax / 4 + 4, true);
@@ -645,8 +682,13 @@ exports.initCasio = function(modeObj) {
     if (on) {
       updateSystemStatus();
       currentMode.update();
+      enforceRedrawDigits();
       renderAll(renderedWatchState(), showHighlighted);
       if (SHOW_WIDGETS) showWidgets(WIDGET_SHOW_TIME_MS);
+      mainTimer = setInterval(() => mainInterval(renderedWatchState()), MAIN_INTERVAL_MS);
+    } else {
+      // Save energy
+      clearInterval(mainTimer);
     }
   });
 

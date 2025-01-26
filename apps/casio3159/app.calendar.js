@@ -73,7 +73,7 @@ function updateCalendar() {
   calendarWatchState.dividers.dot = true;
   calendarWatchState.dividers.smallDot = false;
   calendarWatchState.lowerDigits.value = getWeekNumber(now).toString().padStart(2, '0');
-  calendarWatchState.upperDigits.value = time.day;
+  calendarWatchState.upperDigits.value = time.day.padStart(2, '0');
   calendarWatchState.middleDigits.value = time.month.padStart(2, '0');
   calendarWatchState.textField.text = time.weekday;
   calendarWatchState.textBox.text = time.year;
@@ -129,3 +129,13 @@ if (LOGGING_ENABLED) {
   casio.disableLogging();
 }
 let clockInterval = setInterval(() => {updateCalendar();}, 10000);
+
+// Initial rendering on turning on LCD
+Bangle.on('lcdPower',on =>{
+  if (on) {
+    clockInterval = setInterval(() => {updateCalendar();}, 10000);
+  } else {
+    // Save energy
+    clearInterval(clockInterval);
+  }
+});
