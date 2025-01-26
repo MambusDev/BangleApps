@@ -47,15 +47,30 @@ const BLUE = {r:0.3,g:0.9,b:1};
 const TURKISH = {r:0.1,g:1,b:0.8};
 const YELLOW = {r:1,g:0.8,b:0.1};
 const RED = {r:1,g:0.2,b:0.5};
+const NEON_GREEN = {r:0.1,g:1,b:0.1};
+const NEON_PINK = {r:1,g:0.1,b:0.6};
+const NEON_PURPLE = {r:0.6,g:0.2,b:1};
+const NEON_ORANGE = {r:1,g:0.4,b:0};
+const NEON_BLUE = {r:0.1,g:0.8,b:1};
+const NEON_YELLOW = {r:1,g:1,b:0.1};
 
+// Styles
 const STYLES = [
   {bg: LIGHT_GRAY, fg: BLACK},
-  {bg: BLUE, fg: BLACK},
   {bg: TURKISH, fg: BLACK},
-  {bg: YELLOW, fg: BLACK},
+  {bg: BLUE, fg: BLACK},
+  {bg: NEON_BLUE, fg: BLACK},
+  {bg: NEON_PURPLE, fg: BLACK},
   {bg: RED, fg: BLACK},
-  {bg: BLACK, fg: LIGHT_GRAY},
+  {bg: NEON_PINK, fg: BLACK},
+  {bg: NEON_YELLOW, fg: BLACK},
+  {bg: YELLOW, fg: BLACK},
+  {bg: NEON_ORANGE, fg: BLACK},
+  {bg: NEON_GREEN, fg: BLACK},
+  {bg: DARK_GRAY, fg: NEON_GREEN},
+  {bg: BLACK, fg: LIGHT_GRAY}
 ];
+
 
 // Language setting
 const LANGUAGES = {
