@@ -33,9 +33,9 @@ function getTimeStrings() {
 let calendarWatchState = {
   cw: false,
   dividers: {
-    colon: true,
-    smallDot: false,
-    dot: false
+    colon: false,
+    smallDot: true,
+    dot: true
   },
   upperDigits: {
     value: "00",
@@ -71,7 +71,7 @@ function updateCalendar() {
   calendarWatchState.cw = true;
   calendarWatchState.dividers.colon = false;
   calendarWatchState.dividers.dot = true;
-  calendarWatchState.dividers.smallDot = false;
+  calendarWatchState.dividers.smallDot = true;
   calendarWatchState.lowerDigits.value = getWeekNumber(now).toString().padStart(2, '0');
   calendarWatchState.upperDigits.value = time.day.padStart(2, '0');
   calendarWatchState.middleDigits.value = time.month.padStart(2, '0');
