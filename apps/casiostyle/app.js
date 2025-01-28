@@ -182,9 +182,17 @@ function initializeStyle() {
 function drawSmallDot() {
   setColor(g, fgColor);
   setBgColor(g, bgColor);
-  g.setFont("7x11Numeric7Seg", 3);
+  g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
-  g.drawString(".", xmax - margin.right - 42, ymax - margin.bottom - 2.5 * ymax / 10, true);
+  g.drawString(".", xmin + margin.left + 175, ymax - margin.bottom - 2.5 * ymax / 10, true);
+}
+
+function drawDot() {
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
+  g.setFont("7x11Numeric7Seg", 5);
+  g.setFontAlign(-1, 1, 0); // left, bottom, normal
+  g.drawString(".", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
 }
 
 // Only update display if values change to avoid flickering
@@ -226,14 +234,6 @@ function drawColon() {
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
   g.drawString(":", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
-}
-
-function drawDot() {
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
-  g.setFont("7x11Numeric7Seg", 5);
-  g.setFontAlign(-1, 1, 0); // left, bottom, normal
-  g.drawString(".", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
 }
 
 function drawMiddleDigits(digits) {
