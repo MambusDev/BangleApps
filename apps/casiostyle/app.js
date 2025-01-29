@@ -14,7 +14,7 @@ const xmax = g.getWidth();
 const ymax = g.getHeight();
 const center = {x: xmax / 2, y: ymax / 2};
 // Margin at top bigger for widgets
-const margin = {top: ymax / 8, bottom: 2, left: 6, right: 6};
+const margin = {top: ymax / 8, bottom: 2, left: 3, right: 3};
 // Positioning of battery status
 const battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
 
@@ -22,7 +22,7 @@ const storage = require('Storage');
 const SETTINGS_FILE = 'setting.json';
 
 // Button timing
-const LONG_PRESSED_TIME_MS = 750;
+const LONG_PRESSED_TIME_MS = 600;
 
 // Button sounds
 const BTN_BEEP_TIME_MS = 80;
@@ -154,6 +154,7 @@ function setStyle(style) {
   fgColor=style.fg;
   bgColor=style.bg;
   enforceRedrawDigits();
+  enforceRedrawCircle();
 }
 
 function getAccentColor(bgColor, fgColor) {
@@ -179,12 +180,65 @@ function initializeStyle() {
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Drawing functions
 ////////////////////////////////////////////////////////////////////////////////////////////
+function drawArc(cx, cy, outerR, innerR, startAngle, endAngle) {
+  let points = [];
+  let steps = 18;
+
+  // Shift angles by -90° to start at the top
+  startAngle = (startAngle - 90) * Math.PI / 180;
+  endAngle = (endAngle - 90) * Math.PI / 180;
+
+  // Outer Arc (Clockwise)
+  for (let theta = startAngle; theta < endAngle; theta += steps * Math.PI / 180) {
+    points.push(cx + outerR * Math.cos(theta));
+    points.push(cy + outerR * Math.sin(theta));
+  }
+  points.push(cx + outerR * Math.cos(endAngle));
+  points.push(cy + outerR * Math.sin(endAngle));
+
+  // Inner Arc (Counterclockwise)
+  for (let theta = endAngle; theta > startAngle; theta -= steps * Math.PI / 180) {
+    points.push(cx + innerR * Math.cos(theta));
+    points.push(cy + innerR * Math.sin(theta));
+  }
+  points.push(cx + innerR * Math.cos(startAngle));
+  points.push(cy + innerR * Math.sin(startAngle));
+
+  g.fillPoly(points);
+}
+
+let lastDrawnCircle = { startAngle: 0, stopAngle: 0 };
+
+function enforceRedrawCircle() {
+  lastDrawnCircle = { startAngle: 0, stopAngle: 0 };
+}
+
+function drawCircle(startAngle, stopAngle) {
+  let x = xmin + margin.left;
+  let y = ymin + margin.top + 12;
+  let r = ICON_SIZE * ICON_SCALE;
+  let borderWidth = 4;
+
+  // Only clear if circle changed to avoid flickering
+  if ((lastDrawnCircle.startAngle != startAngle) || (lastDrawnCircle.stopAngle != stopAngle)) {
+    lastDrawnCircle = {startAngle: startAngle, stopAngle: stopAngle};
+    setColor(g, bgColor);
+    setBgColor(g, bgColor);
+    drawArc(x + r, y + r, r, r - borderWidth, 0, 360);
+  }
+
+  setColor(g, fgColor);
+  setBgColor(g, bgColor);
+
+  drawArc(x + r, y + r, r, r - borderWidth, startAngle, stopAngle);
+}
+
 function drawSmallDot() {
   setColor(g, fgColor);
   setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
-  g.drawString(".", xmin + margin.left + 175, ymax - margin.bottom - 2.5 * ymax / 10, true);
+  g.drawString(".", xmin + margin.left + 175, ymax - margin.bottom - 2.5 * ymax / 10, false);
 }
 
 function drawDot() {
@@ -192,7 +246,7 @@ function drawDot() {
   setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
-  g.drawString(".", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
+  g.drawString(".", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, false); // 70 = two times font width
 }
 
 // Only update display if values change to avoid flickering
@@ -210,7 +264,7 @@ function drawLowerDigits(digits) {
   g.setFontAlign(1, 1, 0); // right, bottom, normal
 
   setColor(g, getAccentColor(bgColor, fgColor));
-  g.drawString("88", xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
+  g.drawString("888", xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
   setColor(g, fgColor);
   g.drawString(digits, xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, false);
 }
@@ -342,26 +396,76 @@ function drawBatteryStatus(battery) {
   drawBatteryBar(battery);
 }
 
+function getIconPos(slot) {
+  let x1 = 0;
+  let y1 = 0;
+  let x2 = 0;
+  let y2 = 0;
+
+  // Below bottom bar
+  if (slot < 5) {
+    x1 = xmin + 2 * margin.left + slot * (ICON_SIZE * ICON_SCALE + margin.left);
+    y1 = ymax - ymax / 10 + margin.bottom;
+    x2 = x1 + ICON_SIZE * ICON_SCALE; // Icon size = 48x48
+    y2 = y1 + ICON_SIZE * ICON_SCALE; // Icon size = 48x48
+  }
+
+  // Top left
+  if (slot == 5) {
+    x1 = xmin + margin.left + 10;
+    y1 = ymin + margin.top + 22;
+    x2 = x1 + ICON_SIZE * ICON_SCALE;
+    y2 = y1 + ICON_SIZE * ICON_SCALE;
+  }
+
+  // Bottom right
+  if (slot == 6) {
+    x1 = xmax - xmax / 4;
+    y1 = center.y + 2;
+    x2 = x1 + ICON_SIZE * ICON_SCALE;
+    y2 = y1 + ICON_SIZE * ICON_SCALE;
+  }
+
+  return {x1: x1, y1: y1, x2: x2, y2: y2};
+}
+
 function clearIcon(slot) {
   setColor(g, bgColor);
+  let pos = getIconPos(slot);
 
-  x1 = xmin + 2 * margin.left + slot * (ICON_SIZE * ICON_SCALE + margin.left);
-  y1 = ymax - ymax / 10 + margin.bottom;
-  x2 = x1 + ICON_SIZE * ICON_SCALE; // Icon size = 48x48
-  y2 = y1 + ICON_SIZE * ICON_SCALE; // Icon size = 48x48
-
-  g.fillRect(x1, y1, x2, y2);
+  g.fillRect(pos.x1, pos.y1, pos.x2, pos.y2);
 }
 
 function drawIcon(icon, slot) {
   setColor(g, fgColor);
   setBgColor(g, fgColor);
 
-  x1 = xmin + 2 * margin.left + slot * (ICON_SIZE * ICON_SCALE + margin.left);
-  y1 = ymax - ymax / 10 + margin.bottom;
+  let pos = getIconPos(slot);
 
-  g.drawImage(icon, x1, y1, {scale:ICON_SCALE});
+  g.drawImage(icon, pos.x1, pos.y1, {scale:ICON_SCALE});
 
+}
+
+function drawHeart(clear) {
+  const slot = 6;
+
+  if (clear) {
+    clearIcon(slot);
+  } else {
+    heartIcon = loadIcon("heart.icon");
+    drawIcon(heartIcon, slot);
+  }
+}
+
+function drawFeet(clear) {
+  const slot = 5;
+
+  if (clear) {
+    clearIcon(slot);
+  } else {
+    feetIcon = loadIcon("feet.icon");
+    drawIcon(feetIcon, slot);
+  }
 }
 
 function drawBtStatus(bt_enabled, bt_connected) {
@@ -479,6 +583,33 @@ function renderSlowContents(watchState, showHighlighted) {
     textBanner = watchState.textBanner.text;
   }
 
+  if (watchState.heart.show) {
+    if (watchState.heart.highlighted) {
+      // Blink
+      drawHeart(!showHighlighted);
+    } else {
+      // Show always
+      drawHeart(false); 
+    }
+  } else {
+    // Clear
+    drawHeart(true);
+  }
+
+  if (watchState.feet.show) {
+    if (watchState.feet.highlighted) {
+      // Blink
+      drawFeet(!showHighlighted);
+    } else {
+      // Show always
+      drawFeet(false);
+    }
+  } else {
+    // Clear
+    drawFeet(true);
+  }
+
+  drawCircle(watchState.circle.startValue, watchState.circle.endValue);
   drawMiddleDigits(middleDigits);
   drawUpperDigits(upperDigits);
   drawTextField(textField);
@@ -500,9 +631,9 @@ function renderFastContents(watchState, showHighlighted) {
 
 function renderAll(watchState, showHighlighted) {
   renderUi(watchState);
-  renderVerySlowContents(watchState);
-  renderSlowContents(watchState, showHighlighted);
   renderFastContents(watchState, showHighlighted);
+  renderSlowContents(watchState, showHighlighted);
+  renderVerySlowContents(watchState);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -512,6 +643,20 @@ let showHighlighted = true;
 
 // State to be rendered
 let modeWatchState = {
+  heart: {
+    show: false,
+    highlighted: false
+  },
+  feet: {
+    show: false,
+    highlighted: false
+  },
+  circle: {
+    startValue: 0,
+    endValue: 0,
+    show: false,
+    highlighted: false
+  },
   cw: false,
   dividers: {
     colon: true,
@@ -654,6 +799,10 @@ exports.changeState = function(state) {
   currentModeState = state;
 };
 
+exports.getState = function() {
+  return currentModeState;
+};
+
 exports.setStyle = function(style) {
   setStyle(style);
   saveValue("style", style);
@@ -703,6 +852,7 @@ exports.initCasio = function(modeObj) {
       updateSystemStatus();
       currentMode.update();
       enforceRedrawDigits();
+      enforceRedrawCircle();
       renderAll(renderedWatchState(), showHighlighted);
       if (SHOW_WIDGETS) showWidgets(WIDGET_SHOW_TIME_MS);
       mainTimer = setInterval(() => mainInterval(renderedWatchState()), MAIN_INTERVAL_MS);
@@ -790,29 +940,28 @@ function logSystemState() {
 let mainTicks = 0;
 
 function mainInterval(watchState) {
-  // After 1000 ms
-  if ((mainTicks % (1000 / MAIN_INTERVAL_MS)) == 0) {
-    if (global.gc) global.gc();
-    renderVerySlowContents(watchState);
-  }
-
   // After 10s
   if ((mainTicks % (10000 / MAIN_INTERVAL_MS)) == 0) {
     if (LOGGING_ENABLED) {
       logSystemState();
     }
   }
-
-  // After 250 ms
-  if ((mainTicks % (250 / MAIN_INTERVAL_MS)) == 0) {
-    updateSystemStatus();
-    renderFastContents(watchState, showHighlighted);
+  // After 1000 ms
+  if ((mainTicks % (1000 / MAIN_INTERVAL_MS)) == 0) {
+    if (global.gc) global.gc();
+    renderVerySlowContents(watchState);
   }
 
   // After 500 ms
   if ((mainTicks % (500 / MAIN_INTERVAL_MS)) == 0) {
     showHighlighted = !showHighlighted; // 1 second blinking
     renderSlowContents(watchState, showHighlighted);
+  }
+
+  // After 250 ms
+  if ((mainTicks % (250 / MAIN_INTERVAL_MS)) == 0) {
+    updateSystemStatus();
+    renderFastContents(watchState, showHighlighted);
   }
 
   // Each call
