@@ -123,6 +123,8 @@ let sportWatchState = {
 // Update for timer mode
 function updateSport() {
   let time = getTimeStrings();
+  let stepsToday = Bangle.getStepCount();
+
   if (casio.getState() == "running") {
     let hrmString = heartRate? heartRate.toString() : "---";
     sportWatchState.heart.show = true;
@@ -131,6 +133,15 @@ function updateSport() {
     sportWatchState.lowerDigits.value = hrmString.padStart(3, ' ');
     sportWatchState.middleDigits.value = "  ";
     sportWatchState.upperDigits.value = "  ";
+    sportWatchState.textBanner.text = `Steps: ${stepsToday}/${stepsTarget}`;
+  } else if (casio.getState() == "reset"){
+    sportWatchState.heart.show = false;
+    sportWatchState.feet.show = true;
+    sportWatchState.feet.highlighted = true;
+    sportWatchState.lowerDigits.value = "---";
+    sportWatchState.middleDigits.value = "--";
+    sportWatchState.upperDigits.value = "--";
+    sportWatchState.textBanner.text = `Reset steps? - ${stepsToday}`;
   } else {
     sportWatchState.heart.show = false;
     sportWatchState.feet.show = true;
@@ -138,11 +149,11 @@ function updateSport() {
     sportWatchState.lowerDigits.value = (stepsTarget % 1000).toString().padStart(3, '0');
     sportWatchState.middleDigits.value = Math.floor(stepsTarget / 1000).toString().padStart(2, '0');
     sportWatchState.upperDigits.value = "  ";
+    sportWatchState.textBanner.text = "Set step target.";
   }
   sportWatchState.circle.startValue = 0;
   sportWatchState.circle.endValue = Math.min(1, stepsToday / stepsTarget) * 360;
   sportWatchState.textBox.text = time.hours + ":" + time.minutes;
-  sportWatchState.textBanner.text = `Steps: ${stepsToday}/${stepsTarget}`;
 
   casio.submitWatchStateToRender(sportWatchState);
 }
@@ -151,9 +162,6 @@ function initializeLoadedValues() {
   let data = casio.loadSavedValues();
 
   // Check if the key exists before initializing
-  if ("stepsToday" in data) {
-    stepsToday = data.stepsToday;
-  }
   if ("stepsTarget" in data) {
     stepsTarget = data.stepsTarget;
   }
@@ -178,25 +186,33 @@ let sportMode =
   callbacks: {
     running: {
       BTN1_short: () => {},
-      BTN1_long: () => {sportWatchState.middleDigits.highlighted = true; sportWatchState.lowerDigits.highlighted = false; casio.changeState("changeBig"); updateSport(); },
+      BTN1_long: () => { casio.changeState("reset"); updateSport(); },
       BTN2_short: () => {},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => {sportWatchState.circle.endValue = 0; Bangle.setHRMPower(0); casio.loadNextMode();},
+      BTN3_long: () => {}
+    },
+    reset: {
+      BTN1_short: () => {},
+      BTN1_long: () => { Bangle.setStepCount(0); updateSport(); },
+      BTN2_short: () => { sportWatchState.middleDigits.highlighted = true; sportWatchState.lowerDigits.highlighted = false; casio.changeState("changeBig"); updateSport();},
+      BTN2_long: () => {},
+      BTN3_short: () => {},
       BTN3_long: () => {}
     },
     changeBig: {
       BTN1_short: () => {stepsTarget += 1000; sanitizeStepsTarget(); updateSport(); },
       BTN1_long: () => {tenThousandSteps(true); sanitizeStepsTarget(); updateSport(); },
       BTN2_short: () => {sportWatchState.middleDigits.highlighted = false; sportWatchState.lowerDigits.highlighted = true; casio.saveValue("stepsTarget", stepsTarget); casio.changeState("changeSmall"); updateSport(); },
-      BTN2_long: () => Bangle.showLauncher(),
+      BTN2_long: () => {},
       BTN3_short: () => {stepsTarget -= 1000; sanitizeStepsTarget(); updateSport(); },
       BTN3_long: () => {tenThousandSteps(false); sanitizeStepsTarget(); updateSport();}
     },
     changeSmall: {
       BTN1_short: () => {stepsTarget += 100; sanitizeStepsTarget(); updateSport(); },
-      BTN1_long: () => {},
+      BTN1_long: () => {Bangle.setStepCount(0); updateSport();},
       BTN2_short: () => {sportWatchState.middleDigits.highlighted = false; sportWatchState.lowerDigits.highlighted = false; casio.saveValue("stepsTarget", stepsTarget); casio.changeState("running"); updateSport(); },
-      BTN2_long: () => Bangle.showLauncher(),
+      BTN2_long: () => {},
       BTN3_short: () => {stepsTarget -= 100; sanitizeStepsTarget(); updateSport(); },
       BTN3_long: () => {}
     }
@@ -207,7 +223,6 @@ let sportMode =
 // App Script
 ////////////////////////////////////////////////////////////////////////////////////////////
 let heartRate;
-let stepsToday = 0;
 let stepsTarget = 10000;
 
 Bangle.setHRMPower(1); // Enable HRM
@@ -229,13 +244,11 @@ Bangle.on('HRM', function(hrm) {
 
 // Event listener for step counting
 Bangle.on('step', function(count) {
-  stepsToday++;
-  casio.saveValue("stepsToday", stepsToday);
-  if (stepsToday == stepsTarget) {
-    Bangle.buzz(NOTIFY_BUZZ_TIME_MS); 
+  if (Bangle.getStepCount() == stepsTarget) {
+    Bangle.buzz(NOTIFY_BUZZ_TIME_MS);
   }
   updateSport();
 });
 
-let sportTimer = setInterval(() => { if (isMidnight()) stepsToday = 0;}, 1000);
+let sportTimer = setInterval(() => { if (isMidnight()) Bangle.setStepCount(0);}, 1000);
 

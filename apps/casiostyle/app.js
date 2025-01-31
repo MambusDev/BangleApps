@@ -367,7 +367,7 @@ function drawTextBanner(text) {
   setBgColor(g, getAccentColor(bgColor, fgColor));
   g.setFont("8x12", 2);
   g.setFontAlign(-1, -1, 0); // left, top, normal
-  g.drawString(text.padEnd(20, ' '), xmin + margin.left, ymin + margin.top + ymax / 4 + 6, true);
+  g.drawString(text.padEnd(25, ' '), xmin + margin.left, ymin + margin.top + ymax / 4 + 6, true);
 }
 
 function clearBatteryStatus() {
