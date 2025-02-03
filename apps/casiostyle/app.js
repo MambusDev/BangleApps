@@ -457,6 +457,17 @@ function drawHeart(clear) {
   }
 }
 
+function drawMoon(clear) {
+  const slot = 5;
+
+  if (clear) {
+    clearIcon(slot);
+  } else {
+    moonIcon = loadIcon("moon.icon");
+    drawIcon(moonIcon, slot);
+  }
+}
+
 function drawFeet(clear) {
   const slot = 5;
 
@@ -589,13 +600,14 @@ function renderSlowContents(watchState, showHighlighted) {
       drawHeart(!showHighlighted);
     } else {
       // Show always
-      drawHeart(false); 
+      drawHeart(false);
     }
   } else {
     // Clear
     drawHeart(true);
   }
 
+  // Feet and moon share the same slot
   if (watchState.feet.show) {
     if (watchState.feet.highlighted) {
       // Blink
@@ -604,9 +616,17 @@ function renderSlowContents(watchState, showHighlighted) {
       // Show always
       drawFeet(false);
     }
+  } else if (watchState.moon.show) {
+    if (watchState.moon.highlighted) {
+      // Blink
+      drawMoon(!showHighlighted);
+    } else {
+      // Show always
+      drawMoon(false);
+    }
   } else {
     // Clear
-    drawFeet(true);
+    drawMoon(true);
   }
 
   drawCircle(watchState.circle.startValue, watchState.circle.endValue);
@@ -648,6 +668,10 @@ let modeWatchState = {
     highlighted: false
   },
   feet: {
+    show: false,
+    highlighted: false
+  },
+  moon: {
     show: false,
     highlighted: false
   },
@@ -1013,7 +1037,6 @@ let btnState = [{longPressTimer: null, isLongPress: false},{longPressTimer: null
 let btnCallback = [{short: onShortPressedBTN1, long: onLongPressedBTN1},{short: onShortPressedBTN2, long: onLongPressedBTN2},{short: onShortPressedBTN3, long: onLongPressedBTN3}];
 
 function handleRising(btn) {
-  btnCallback[btn].short(); // Trigger short press action immediately
   btnState[btn].isLongPress = false; // Reset long press state
   btnState[btn].longPressTimer = setTimeout(() => {
     btnState[btn].isLongPress = true; // Mark as long press
@@ -1025,5 +1048,9 @@ function handleFalling(btn) {
   if (btnState[btn].longPressTimer) {
     clearTimeout(btnState[btn].longPressTimer); // Cancel the long press timer
     btnState[btn].longPressTimer = null;
+  }
+
+  if (!btnState[btn].isLongPress) {
+    btnCallback[btn].short();
   }
 }
