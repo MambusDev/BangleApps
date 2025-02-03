@@ -4,45 +4,10 @@
 //Casio style library
 const casio = require("casiostyle");
 
-const storage = require("Storage");
-
 const language = casio.LANGUAGES.GERMAN;
 
 // Memory logging
 const LOGGING_ENABLED = false;
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// Settings
-////////////////////////////////////////////////////////////////////////////////////////////
-
-const SETTINGS_FILE = 'setting.json';
-let settings;
-
-//load settings
-function loadSettings() {
-  settings = storage.readJSON(SETTINGS_FILE, 1) || {};
-}
-
-//return setting
-function setting(key) {
-  //define default settings
-  const DEFAULTS = {
-    "wakeOnFaceUp":false,
-    "wakeOnTouch":true,
-    "wakeOnTwist":true
-  };
-  if (!settings) { loadSettings(); }
-  return (key in settings) ? settings[key] : DEFAULTS[key];
-}
-
-function initializeLoadedValues() {
-  let data = casio.loadSavedValues();
-
-  // Check if the key exists before initializing
-  if ("nightMode" in data) {
-    nightMode = data.nightMode;
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // System parameter getters
@@ -104,47 +69,11 @@ function nextStyle() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// Nightmode
-////////////////////////////////////////////////////////////////////////////////////////////
-let nightMode = false;
-
-function enableNightMode() {
-  Bangle.setOptions({
-    wakeOnTwist: false,
-    wakeOnTouch: false,
-    wakeOnFaceUp: false
-  });
-}
-
-function disableNightMode() {
-  Bangle.setOptions({
-    wakeOnTwist: setting("wakeOnTwist"),
-    wakeOnTouch: setting("wakeOnTouch"),
-    wakeOnFaceUp: setting("wakeOnFaceUp")
-  });
-}
-
-function toggleNightMode() {
-  nightMode = !nightMode;
-  casio.saveValue("nightMode", nightMode);
-
-  if (nightMode) {
-    enableNightMode();
-  } else {
-    disableNightMode();
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////
 // Contents to be rendered
 ////////////////////////////////////////////////////////////////////////////////////////////
 // State to be rendered
 let clockWatchState = {
   cw: false,
-  moon: {
-    show: false,
-    highlighted: false
-  },
   dividers: {
     colon: true,
     smallDot: false,
@@ -189,7 +118,6 @@ function updateClock() {
   clockWatchState.lowerDigits.value = time.seconds;
   clockWatchState.textField.text = time.weekday;
   clockWatchState.textBox.text = time.day + "." + time.month.padStart(2, ' ');
-  clockWatchState.moon.show = nightMode;
   // Submit for rendering
   casio.submitWatchStateToRender(clockWatchState);
 }
@@ -206,7 +134,7 @@ let clockMode =
   callbacks: {
     running: {
       BTN1_short: () => {nextStyle();},
-      BTN1_long: () => {toggleNightMode();},
+      BTN1_long: () => {casio.toggleNightMode();},
       BTN2_short: () => {casio.showWidgets(5000);},
       BTN2_long: () => Bangle.showLauncher(),
       BTN3_short: () => casio.loadNextMode(),
@@ -218,12 +146,6 @@ let clockMode =
 ////////////////////////////////////////////////////////////////////////////////////////////
 // App Script
 ////////////////////////////////////////////////////////////////////////////////////////////
-initializeLoadedValues();
-if (nightMode) {
-  enableNightMode();
-} else {
-  disableNightMode();
-}
 casio.initCasio(clockMode);
 if (LOGGING_ENABLED) {
   casio.enableLogging();

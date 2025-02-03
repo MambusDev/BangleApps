@@ -102,7 +102,10 @@ function setting(key) {
   //define default settings
   const DEFAULTS = {
     'ble' : false,
-    'beep' : false
+    'beep' : false,
+    'wakeOnFaceUp':false,
+    'wakeOnTouch':true,
+    'wakeOnTwist':true
   };
   if (!settings) { loadSettings(); }
   return (key in settings) ? settings[key] : DEFAULTS[key];
@@ -131,6 +134,47 @@ function getBatteryLevel() {
 
 function alarmIsSet() {
   return (storage.readJSON('sched.json',1)||[]).some(alarm=>alarm.on);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Nightmode
+////////////////////////////////////////////////////////////////////////////////////////////
+let nightMode = false;
+
+function enableNightMode() {
+  Bangle.setOptions({
+    wakeOnTwist: false,
+    wakeOnTouch: false,
+    wakeOnFaceUp: false
+  });
+}
+
+function disableNightMode() {
+  Bangle.setOptions({
+    wakeOnTwist: setting("wakeOnTwist"),
+    wakeOnTouch: setting("wakeOnTouch"),
+    wakeOnFaceUp: setting("wakeOnFaceUp")
+  });
+}
+
+function toggleNightMode() {
+  systemWatchState.nightMode = !systemWatchState.nightMode;
+  saveValue("nightMode", systemWatchState.nightMode);
+
+  if (systemWatchState.nightMode) {
+    enableNightMode();
+  } else {
+    disableNightMode();
+  }
+}
+
+function initializeNightMode() {
+  let data = casio.loadSavedValues();
+
+  // Check if the key exists before initializing
+  if ("nightMode" in data) {
+    systemWatchState.nightMode = data.nightMode;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -616,17 +660,13 @@ function renderSlowContents(watchState, showHighlighted) {
       // Show always
       drawFeet(false);
     }
-  } else if (watchState.moon.show) {
-    if (watchState.moon.highlighted) {
-      // Blink
-      drawMoon(!showHighlighted);
-    } else {
-      // Show always
-      drawMoon(false);
-    }
+  } else if (watchState.nightMode) {
+    // Show always
+    drawMoon(false);
   } else {
     // Clear
     drawMoon(true);
+    drawFeet(true);
   }
 
   drawCircle(watchState.circle.startValue, watchState.circle.endValue);
@@ -668,10 +708,6 @@ let modeWatchState = {
     highlighted: false
   },
   feet: {
-    show: false,
-    highlighted: false
-  },
-  moon: {
     show: false,
     highlighted: false
   },
@@ -718,6 +754,7 @@ let systemWatchState = {
     enabled: false,
     connected: false
   },
+  nightMode: false,
   charging: false,
   muted: false,
   alarm: false,
@@ -792,6 +829,8 @@ exports.STYLES = STYLES;
 
 exports.LANGUAGES = LANGUAGES;
 
+exports.toggleNightMode = toggleNightMode;
+
 exports.hideWidgets = hideWidgets;
 
 exports.showWidgets = showWidgets;
@@ -862,6 +901,13 @@ exports.initCasio = function(modeObj) {
   currentModeState = currentMode.defaultState;
 
   if (SHOW_WIDGETS) Bangle.loadWidgets();
+
+  initializeNightMode();
+  if (systemWatchState.nightMode) {
+    enableNightMode();
+  } else {
+    disableNightMode();
+  }
 
   // Reset the state of the graphics library
   g.reset();
