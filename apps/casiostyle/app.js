@@ -772,6 +772,11 @@ exports.hideWidgets = hideWidgets;
 
 exports.showWidgets = showWidgets;
 
+exports.loadClockMode = function() {
+  // Load the next mode script
+  load("casio/modes/clock.js");
+};
+
 exports.loadNextMode = function() {
   // List all scripts in the "casio/modes/" namespace
   let scripts = storage.list("casio/modes/");

@@ -188,7 +188,7 @@ let sportMode =
       BTN1_short: () => {},
       BTN1_long: () => { casio.changeState("reset"); updateSport(); },
       BTN2_short: () => {},
-      BTN2_long: () => Bangle.showLauncher(),
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => {sportWatchState.circle.endValue = 0; Bangle.setHRMPower(0); casio.loadNextMode();},
       BTN3_long: () => {}
     },
@@ -196,7 +196,7 @@ let sportMode =
       BTN1_short: () => {},
       BTN1_long: () => { Bangle.setStepCount(0); updateSport(); },
       BTN2_short: () => { sportWatchState.middleDigits.highlighted = true; sportWatchState.lowerDigits.highlighted = false; casio.changeState("changeBig"); updateSport();},
-      BTN2_long: () => {},
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => {},
       BTN3_long: () => {}
     },
@@ -204,7 +204,7 @@ let sportMode =
       BTN1_short: () => {stepsTarget += 1000; sanitizeStepsTarget(); updateSport(); },
       BTN1_long: () => {tenThousandSteps(true); sanitizeStepsTarget(); updateSport(); },
       BTN2_short: () => {sportWatchState.middleDigits.highlighted = false; sportWatchState.lowerDigits.highlighted = true; casio.saveValue("stepsTarget", stepsTarget); casio.changeState("changeSmall"); updateSport(); },
-      BTN2_long: () => {},
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => {stepsTarget -= 1000; sanitizeStepsTarget(); updateSport(); },
       BTN3_long: () => {tenThousandSteps(false); sanitizeStepsTarget(); updateSport();}
     },
@@ -212,7 +212,7 @@ let sportMode =
       BTN1_short: () => {stepsTarget += 100; sanitizeStepsTarget(); updateSport(); },
       BTN1_long: () => {Bangle.setStepCount(0); updateSport();},
       BTN2_short: () => {sportWatchState.middleDigits.highlighted = false; sportWatchState.lowerDigits.highlighted = false; casio.saveValue("stepsTarget", stepsTarget); casio.changeState("running"); updateSport(); },
-      BTN2_long: () => {},
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => {stepsTarget -= 100; sanitizeStepsTarget(); updateSport(); },
       BTN3_long: () => {}
     }

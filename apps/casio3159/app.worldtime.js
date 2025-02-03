@@ -149,7 +149,7 @@ let worldTimeMode =
       BTN1_short: () => {nextTimeZone(); updateWorldTime(TIMEZONES[currentTimeZone]); casio.saveValue("currentTimeZone", currentTimeZone);},
       BTN1_long: () => {},
       BTN2_short: () => {},
-      BTN2_long: () => Bangle.showLauncher(),
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => casio.loadNextMode(),
       BTN3_long: () => {}
     }

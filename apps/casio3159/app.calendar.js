@@ -112,7 +112,7 @@ let calendarMode =
       BTN1_short: () => {},
       BTN1_long: () => {},
       BTN2_short: () => {},
-      BTN2_long: () => Bangle.showLauncher(),
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => casio.loadNextMode(),
       BTN3_long: () => {}
     }

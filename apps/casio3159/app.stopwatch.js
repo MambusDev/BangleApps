@@ -83,7 +83,7 @@ let stopwatchMode =
       BTN1_short: () => {stopwatchTicks = 0; updateStopwatch(stopwatchTicks);},
       BTN1_long: () => {},
       BTN2_short: () => {casio.changeState("running"); stopwatchTimer = setInterval(() => { incStopwatchTicks(); updateStopwatch(stopwatchTicks);}, STOPWATCH_INTERVAL_MS);},
-      BTN2_long: () => Bangle.showLauncher(),
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => casio.loadNextMode(),
       BTN3_long: () => {}
     },
@@ -91,7 +91,7 @@ let stopwatchMode =
       BTN1_short: () => {},
       BTN1_long: () => {},
       BTN2_short: () => {casio.changeState("paused"); clearInterval(stopwatchTimer);},
-      BTN2_long: () => Bangle.showLauncher(),
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => {clearInterval(stopwatchTimer); casio.loadNextMode();},
       BTN3_long: () => {}
     },
@@ -99,7 +99,7 @@ let stopwatchMode =
       BTN1_short: () => {stopwatchTicks = 0; currentModeState = "idle"; updateStopwatch(stopwatchTicks);},
       BTN1_long: () => {},
       BTN2_short: () => {casio.changeState("running"); stopwatchTimer = setInterval(() => { incStopwatchTicks(); updateStopwatch(stopwatchTicks);}, STOPWATCH_INTERVAL_MS);},
-      BTN2_long: () => Bangle.showLauncher(),
+      BTN2_long: () => casio.loadClockMode(),
       BTN3_short: () => casio.loadNextMode(),
       BTN3_long: () => {}
     }
