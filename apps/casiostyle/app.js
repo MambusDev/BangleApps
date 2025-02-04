@@ -45,9 +45,11 @@ const LIGHT_GRAY = {r:0.9,g:1,b:0.9};
 const DARK_GRAY = {r:0.4,g:0.5,b:0.4};
 const VERY_DARK_GRAY = {r:0.2,g:0.3,b:0.2};
 const BLUE = {r:0.3,g:0.9,b:1};
+const DARK_BLUE = {r:0.3,g:0.3,b:1};
 const TURKISH = {r:0.1,g:1,b:0.8};
 const YELLOW = {r:1,g:0.8,b:0.1};
 const RED = {r:1,g:0.2,b:0.5};
+const GREEN = {r:0.1,g:0.8,b:0.1};
 const NEON_GREEN = {r:0.1,g:1,b:0.1};
 const NEON_PINK = {r:1,g:0.1,b:0.6};
 const NEON_PURPLE = {r:0.6,g:0.2,b:1};
@@ -71,7 +73,8 @@ const STYLES = [
   {bg: DARK_GRAY, fg: NEON_GREEN},
   {bg: BLACK, fg: LIGHT_GRAY},
   {bg: BLACK, fg: DARK_GRAY},
-  {bg: BLACK, fg: VERY_DARK_GRAY}
+  {bg: BLACK, fg: VERY_DARK_GRAY},
+  {bg: BLACK, fg: BLACK} // Multicolor
 ];
 
 
@@ -187,6 +190,11 @@ function initializeNightMode() {
 let fgColor = BLACK;  // Default
 let bgColor = LIGHT_GRAY;  // Default
 
+function isMulticolor() {
+  return fgColor.r === 0 && fgColor.g === 0 && fgColor.b === 0 &&
+         bgColor.r === 0 && bgColor.g === 0 && bgColor.b === 0;
+}
+
 function setColor(g, color) {
   g.setColor(color.r, color.g, color.b);
   return g;
@@ -266,31 +274,48 @@ function drawCircle(startAngle, stopAngle) {
   let r = ICON_SIZE * ICON_SCALE;
   let borderWidth = 4;
 
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    fg = GREEN;
+    bg = LIGHT_GRAY;
+  }
+
   // Only clear if circle changed to avoid flickering
   if ((lastDrawnCircle.startAngle != startAngle) || (lastDrawnCircle.stopAngle != stopAngle)) {
     lastDrawnCircle = {startAngle: startAngle, stopAngle: stopAngle};
-    setColor(g, bgColor);
-    setBgColor(g, bgColor);
+    setColor(g, bg);
+    setBgColor(g, bg);
     drawArc(x + r, y + r, r, r - borderWidth, 0, 360);
   }
 
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
-
+  setColor(g, fg);
+  setBgColor(g, bg);
   drawArc(x + r, y + r, r, r - borderWidth, startAngle, stopAngle);
 }
 
 function drawSmallDot() {
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
+  if (isMulticolor()) {
+    setColor(g, BLACK);
+    setBgColor(g, LIGHT_GRAY);
+  } else {
+    setColor(g, fgColor);
+    setBgColor(g, bgColor);
+  }
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
   g.drawString(".", xmin + margin.left + 175, ymax - margin.bottom - 2.5 * ymax / 10, false);
 }
 
 function drawDot() {
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
+  if (isMulticolor()) {
+    setColor(g, BLACK);
+    setBgColor(g, LIGHT_GRAY);
+  } else {
+    setColor(g, fgColor);
+    setBgColor(g, bgColor);
+  }
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
   g.drawString(".", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, false); // 70 = two times font width
@@ -305,33 +330,64 @@ function enforceRedrawDigits() {
 
 function drawLowerDigits(digits) {
   if (digits == lastDrawnDigits.lower) return;
+
+  let accent = getAccentColor(bgColor, fgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    accent = getAccentColor(LIGHT_GRAY, BLACK);
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+
+  setBgColor(g, bg);
+
   lastDrawnDigits.lower = digits;
-  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 3);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
-
-  setColor(g, getAccentColor(bgColor, fgColor));
+  setColor(g, accent);
   g.drawString("888", xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, true);
-  setColor(g, fgColor);
+  setColor(g, fg);
   g.drawString(digits, xmax - margin.right, ymax - margin.bottom - 2.5 * ymax / 10, false);
 }
 
 function drawUpperDigits(digits) {
   if (digits == lastDrawnDigits.upper) return;
+
+  let accent = getAccentColor(bgColor, fgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    accent = getAccentColor(LIGHT_GRAY, BLACK);
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+
+  setBgColor(g, bg);
+
   lastDrawnDigits.upper = digits;
-  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
 
-  setColor(g, getAccentColor(bgColor, fgColor));
+  setColor(g, accent);
   g.drawString("88", xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, true);
-  setColor(g, fgColor);
+  setColor(g, fg);
   g.drawString(digits, xmin + margin.left, ymax - margin.bottom - 2.5 * ymax / 10, false);
 }
 
 function drawColon() {
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+
+  setColor(g, fg);
+  setBgColor(g, bg);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
   g.drawString(":", xmin + margin.left + 70, ymax - margin.bottom - 2.5 * ymax / 10, true); // 70 = two times font width
@@ -339,20 +395,40 @@ function drawColon() {
 
 function drawMiddleDigits(digits) {
   if (digits == lastDrawnDigits.middle) return;
+
+  let accent = getAccentColor(bgColor, fgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    accent = getAccentColor(LIGHT_GRAY, BLACK);
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+
+  setBgColor(g, bg);
+
   lastDrawnDigits.middle = digits;
-  setBgColor(g, bgColor);
   g.setFont("7x11Numeric7Seg", 5);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
 
-  setColor(g, getAccentColor(bgColor, fgColor));
+  setColor(g, accent);
   g.drawString("88", xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, true); // 105 = three times font width
-  setColor(g, fgColor);
+  setColor(g, fg);
   g.drawString(digits, xmin + margin.left + 95, ymax - margin.bottom - 2.5 * ymax / 10, false); // 105 = three times font width
 }
 
 function drawBatteryLevels() {
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+
+  setColor(g, fg);
+  setBgColor(g, bg);
   g.setFont("Teletext5x9Ascii", 2);
   g.setFontAlign(-1, 1, 0); // left, bottom, normal
 
@@ -367,12 +443,22 @@ function drawBatteryLevels() {
 }
 
 function drawStaticElements() {
+  let accent = getAccentColor(bgColor, fgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    accent = getAccentColor(LIGHT_GRAY, BLACK);
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+
   // Draw Background Color
-  setColor(g, bgColor);
+  setColor(g, bg);
   g.fillRect(xmin, ymin + margin.top - 4, xmax, ymax);
 
   // Draw UI Borders
-  setColor(g, fgColor); // Black
+  setColor(g, fg); // Black
 
   // Top right box
   g.drawRect(center.x, ymin + margin.top, xmax - margin.right, ymin + ymax / 4 + margin.top);
@@ -387,31 +473,52 @@ function drawStaticElements() {
   g.drawLine(center.x - 1, ymax - ymax / 10, center.x - 1, ymax - margin.bottom); // Line width 2
 
   // Text banner background
-  setColor(g, getAccentColor(bgColor, fgColor));
+  setColor(g, accent);
   g.fillRect(xmin, ymin + margin.top + ymax / 4 + 4, xmax, ymin + margin.top + ymax / 4 + 30);
 
   drawBatteryLevels();
 }
 
 function drawTextField(text) {
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+  setColor(g, fg);
+  setBgColor(g, bg);
   g.setFont("Teletext5x9Ascii", 5);
   g.setFontAlign(1, -1, 0); // right, top, normal
   g.drawString(text.padStart(4, ' '), center.x - margin.right, ymin + 1.5 * margin.top, true);
 }
 
 function drawTextBox(text) {
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+  setColor(g, fg);
+  setBgColor(g, bg);
   g.setFont("8x12", 4);
   g.setFontAlign(1, -1, 0); // right, top, normal
   g.drawString(text.padStart(4, ' '), xmax - 1.5 * margin.right, ymin + 1.25 * margin.top, true);
 }
 
 function drawTextBanner(text) {
-  setColor(g, fgColor);
-  setBgColor(g, getAccentColor(bgColor, fgColor));
+  let accent = getAccentColor(bgColor, fgColor);
+  let fg = fgColor;
+
+  if (isMulticolor()) {
+    accent = getAccentColor(LIGHT_GRAY, BLACK);
+    fg = BLACK;
+  }
+  setColor(g, fg);
+  setBgColor(g, accent);
   g.setFont("8x12", 2);
   g.setFontAlign(-1, -1, 0); // left, top, normal
   g.drawString(text.padEnd(25, ' '), xmin + margin.left, ymin + margin.top + ymax / 4 + 6, true);
@@ -420,7 +527,13 @@ function drawTextBanner(text) {
 function clearBatteryStatus() {
   let battery_status = {width: center.x - 2 * margin.left, x: center.x + margin.left};
 
-  setColor(g, bgColor);
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    bg = LIGHT_GRAY;
+  }
+
+  setColor(g, bg);
 
   for (let battery = 0; battery <= 2; battery++) {
     let battery_bar = {x1: battery_status.x + battery * battery_status.width / 3, y1: ymax - ymax / 10 + 2 * margin.bottom, x2: battery_status.x + (battery + 1) * battery_status.width / 3, y2: ymax - 2 * margin.bottom};
@@ -429,8 +542,20 @@ function clearBatteryStatus() {
 }
 
 function drawBatteryBar(battery) {
+  let fg = fgColor;
+
+  if (isMulticolor()) {
+    if (battery == 0) {
+      fg = RED;
+    } else if (battery == 1) {
+      fg = YELLOW;
+    } else {
+      fg = GREEN;
+    }
+  }
+
   // Draw new bar
-  setColor(g, fgColor);
+  setColor(g, fg);
 
   let battery_bar = {x1: battery_status.x + battery * battery_status.width / 3, y1: ymax - ymax / 10 + 2 * margin.bottom, x2: battery_status.x + (battery + 1) * battery_status.width / 3, y2: ymax - 2 * margin.bottom};
   g.fillRect(battery_bar.x1, battery_bar.y1, battery_bar.x2, battery_bar.y2);
@@ -477,17 +602,21 @@ function getIconPos(slot) {
 }
 
 function clearIcon(slot) {
-  setColor(g, bgColor);
+  if (isMulticolor()) {
+    setColor(g, LIGHT_GRAY);
+  } else {
+    setColor(g, bgColor);
+  }
+
   let pos = getIconPos(slot);
 
   g.fillRect(pos.x1, pos.y1, pos.x2, pos.y2);
 }
 
-function drawIcon(icon, slot) {
-  setColor(g, fgColor);
-  setBgColor(g, fgColor);
-
+function drawIcon(icon, slot, color) {
   let pos = getIconPos(slot);
+
+  setBgColor(g, color);
 
   g.drawImage(icon, pos.x1, pos.y1, {scale:ICON_SCALE});
 
@@ -496,45 +625,70 @@ function drawIcon(icon, slot) {
 function drawHeart(clear) {
   const slot = 6;
 
+  let fg = fgColor;
+
+  if (isMulticolor()) {
+    fg = RED;
+  }
+
   if (clear) {
     clearIcon(slot);
   } else {
     heartIcon = loadIcon("heart.icon");
-    drawIcon(heartIcon, slot);
+    drawIcon(heartIcon, slot, fg);
   }
 }
 
 function drawMoon(clear) {
   const slot = 5;
 
+  let fg = fgColor;
+
+  if (isMulticolor()) {
+    fg = NEON_PURPLE;
+  }
+
   if (clear) {
     clearIcon(slot);
   } else {
     moonIcon = loadIcon("moon.icon");
-    drawIcon(moonIcon, slot);
+    drawIcon(moonIcon, slot, fg);
   }
 }
 
 function drawFeet(clear) {
   const slot = 5;
 
+  let fg = fgColor;
+
+  if (isMulticolor()) {
+    fg = GREEN;
+  }
+
   if (clear) {
     clearIcon(slot);
   } else {
     feetIcon = loadIcon("feet.icon");
-    drawIcon(feetIcon, slot);
+    drawIcon(feetIcon, slot, fg);
   }
 }
 
 function drawBtStatus(bt_enabled, bt_connected) {
   const slot = 0;
+
+  let fg = fgColor;
+
+  if (isMulticolor()) {
+    fg = DARK_BLUE;
+  }
+
   if (bt_enabled) {
     if (bt_connected) {
       bt_con_icon = loadIcon("bt_con.icon");
-      drawIcon(bt_con_icon, slot);
+      drawIcon(bt_con_icon, slot, fg);
     } else {
       bt_icon = loadIcon("bt_en.icon");
-      drawIcon(bt_icon, slot);
+      drawIcon(bt_icon, slot, fg);
     }
   } else {
     clearIcon(slot);
@@ -544,21 +698,33 @@ function drawBtStatus(bt_enabled, bt_connected) {
 function drawBeepStatus(muted) {
   const slot = 1;
 
+  let fg = fgColor;
+
+  if (isMulticolor()) {
+    fg = BLACK;
+  }
+
   if (!muted) {
     beep_icon = loadIcon("beep.icon");
-    drawIcon(beep_icon, slot);
+    drawIcon(beep_icon, slot, fg);
   } else {
     mute_icon = loadIcon("muted.icon");
-    drawIcon(mute_icon, slot);
+    drawIcon(mute_icon, slot, fg);
   }
 }
 
 function drawAlarmStatus(alarm) {
   const slot = 2;
 
+  let fg = fgColor;
+
+  if (isMulticolor()) {
+    fg = YELLOW;
+  }
+
   if (alarm) {
     bell_icon = loadIcon("bell.icon");
-    drawIcon(bell_icon, slot);
+    drawIcon(bell_icon, slot, fg);
   } else {
     clearIcon(slot);
   }
@@ -567,17 +733,29 @@ function drawAlarmStatus(alarm) {
 function drawChargingStatus(charging) {
   const slot = 3;
 
+  let fg = fgColor;
+  if (isMulticolor()) {
+    fg = NEON_GREEN;
+  }
+
   if (charging) {
     charging_icon = loadIcon("charging.icon");
-    drawIcon(charging_icon, slot);
+    drawIcon(charging_icon, slot, fg);
   } else {
     clearIcon(slot);
   }
 }
 
 function drawCalendarWeek(clear) {
-  setColor(g, fgColor);
-  setBgColor(g, bgColor);
+  let fg = fgColor;
+  let bg = bgColor;
+
+  if (isMulticolor()) {
+    fg = BLACK;
+    bg = LIGHT_GRAY;
+  }
+  setColor(g, fg);
+  setBgColor(g, bg);
 
   g.setFont("Teletext5x9Ascii", 2);
   g.setFontAlign(1, 1, 0); // right, bottom, normal
@@ -946,27 +1124,27 @@ exports.initCasio = function(modeObj) {
   // Register all (internal) button callbacks
   setWatch(function (e) {
     handleRising(1); // 1 = BTN2
-  }, BTN2, { edge: "rising", repeat: true, debounce: 50 });
+  }, BTN2, { edge: "rising", repeat: true, debounce: 10 });
 
   setWatch(function (e) {
     handleFalling(1); // 1 = BTN2
-  }, BTN2, { edge: "falling", repeat: true, debounce: 50 });
+  }, BTN2, { edge: "falling", repeat: true, debounce: 10 });
 
   setWatch(function (e) {
     handleRising(0); // 0 = BTN1
-  }, BTN1, { edge: "rising", repeat: true, debounce: 50 });
+  }, BTN1, { edge: "rising", repeat: true, debounce: 10 });
 
   setWatch(function (e) {
     handleFalling(0); // 0 = BTN1
-  }, BTN1, { edge: "falling", repeat: true, debounce: 50 });
+  }, BTN1, { edge: "falling", repeat: true, debounce: 10 });
 
   setWatch(function (e) {
     handleRising(2); // 2 = BTN3
-  }, BTN3, { edge: "rising", repeat: true, debounce: 50 });
+  }, BTN3, { edge: "rising", repeat: true, debounce: 10 });
 
   setWatch(function (e) {
     handleFalling(2); // 2 = BTN3
-  }, BTN3, { edge: "falling", repeat: true, debounce: 50 });
+  }, BTN3, { edge: "falling", repeat: true, debounce: 10 });
 };
 
 exports.saveValue = saveValue;
