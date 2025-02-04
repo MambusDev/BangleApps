@@ -735,7 +735,7 @@ function drawChargingStatus(charging) {
 
   let fg = fgColor;
   if (isMulticolor()) {
-    fg = NEON_GREEN;
+    fg = GREEN;
   }
 
   if (charging) {
