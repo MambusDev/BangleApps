@@ -43,6 +43,7 @@ const SAVE_FILE = "casiostate.json";
 const BLACK = {r:0,g:0,b:0};
 const LIGHT_GRAY = {r:0.9,g:1,b:0.9};
 const DARK_GRAY = {r:0.4,g:0.5,b:0.4};
+const VERY_DARK_GRAY = {r:0.2,g:0.3,b:0.2};
 const BLUE = {r:0.3,g:0.9,b:1};
 const TURKISH = {r:0.1,g:1,b:0.8};
 const YELLOW = {r:1,g:0.8,b:0.1};
@@ -68,7 +69,9 @@ const STYLES = [
   {bg: NEON_ORANGE, fg: BLACK},
   {bg: NEON_GREEN, fg: BLACK},
   {bg: DARK_GRAY, fg: NEON_GREEN},
-  {bg: BLACK, fg: LIGHT_GRAY}
+  {bg: BLACK, fg: LIGHT_GRAY},
+  {bg: BLACK, fg: DARK_GRAY},
+  {bg: BLACK, fg: VERY_DARK_GRAY}
 ];
 
 
