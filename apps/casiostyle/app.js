@@ -45,7 +45,7 @@ const LIGHT_GRAY = {r:0.9,g:1,b:0.9};
 const DARK_GRAY = {r:0.4,g:0.5,b:0.4};
 const VERY_DARK_GRAY = {r:0.2,g:0.3,b:0.2};
 const BLUE = {r:0.3,g:0.9,b:1};
-const DARK_BLUE = {r:0.3,g:0.3,b:1};
+const DARK_BLUE = {r:0,g:0.3,b:1};
 const TURKISH = {r:0.1,g:1,b:0.8};
 const YELLOW = {r:1,g:0.8,b:0.1};
 const RED = {r:1,g:0.2,b:0.5};
@@ -77,6 +77,7 @@ const STYLES = [
   {bg: BLACK, fg: BLACK} // Multicolor
 ];
 
+const NIGHTMODE_STYLE = {bg: BLACK, fg: VERY_DARK_GRAY};
 
 // Language setting
 const LANGUAGES = {
@@ -145,14 +146,17 @@ function alarmIsSet() {
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Nightmode
 ////////////////////////////////////////////////////////////////////////////////////////////
-let nightMode = false;
-
 function enableNightMode() {
   Bangle.setOptions({
     wakeOnTwist: false,
     wakeOnTouch: false,
     wakeOnFaceUp: false
   });
+
+  casio.saveValue("styleBeforeNightmode", {bg: bgColor, fg: fgColor});
+  setStyle(NIGHTMODE_STYLE);
+  saveValue("style", NIGHTMODE_STYLE);
+  renderAll(renderedWatchState(), showHighlighted);
 }
 
 function disableNightMode() {
@@ -161,6 +165,13 @@ function disableNightMode() {
     wakeOnTouch: setting("wakeOnTouch"),
     wakeOnFaceUp: setting("wakeOnFaceUp")
   });
+
+  let data = casio.loadSavedValues();
+  let styleBeforeNightmode = ("styleBeforeNightmode" in data) ? data.styleBeforeNightmode : STYLES[0];
+
+  setStyle(styleBeforeNightmode);
+  saveValue("style", styleBeforeNightmode);
+  renderAll(renderedWatchState(), showHighlighted);
 }
 
 function toggleNightMode() {
@@ -645,7 +656,7 @@ function drawMoon(clear) {
   let fg = fgColor;
 
   if (isMulticolor()) {
-    fg = NEON_PURPLE;
+    fg = DARK_BLUE;
   }
 
   if (clear) {
