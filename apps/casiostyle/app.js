@@ -156,7 +156,6 @@ function enableNightMode() {
   casio.saveValue("styleBeforeNightmode", {bg: bgColor, fg: fgColor});
   setStyle(NIGHTMODE_STYLE);
   saveValue("style", NIGHTMODE_STYLE);
-  renderAll(renderedWatchState(), showHighlighted);
 }
 
 function disableNightMode() {
@@ -171,7 +170,6 @@ function disableNightMode() {
 
   setStyle(styleBeforeNightmode);
   saveValue("style", styleBeforeNightmode);
-  renderAll(renderedWatchState(), showHighlighted);
 }
 
 function toggleNightMode() {
@@ -183,6 +181,7 @@ function toggleNightMode() {
   } else {
     disableNightMode();
   }
+  renderAll(renderedWatchState(), showHighlighted);
 }
 
 function initializeNightMode() {
@@ -1064,6 +1063,7 @@ exports.getState = function() {
 };
 
 exports.setStyle = function(style) {
+  if (systemWatchState.nightMode) return; // On nightmode, there is a fixed style
   setStyle(style);
   saveValue("style", style);
   renderAll(renderedWatchState(), showHighlighted);
@@ -1095,11 +1095,6 @@ exports.initCasio = function(modeObj) {
   if (SHOW_WIDGETS) Bangle.loadWidgets();
 
   initializeNightMode();
-  if (systemWatchState.nightMode) {
-    enableNightMode();
-  } else {
-    disableNightMode();
-  }
 
   // Reset the state of the graphics library
   g.reset();
@@ -1109,6 +1104,11 @@ exports.initCasio = function(modeObj) {
   updateSystemStatus();
   currentMode.update();
   initializeStyle();
+  if (systemWatchState.nightMode) {
+    enableNightMode();
+  } else {
+    disableNightMode();
+  }
   renderAll(renderedWatchState(), showHighlighted);
   if (SHOW_WIDGETS) showWidgets(WIDGET_SHOW_TIME_MS);
   mainTimer = setInterval(() => mainInterval(renderedWatchState()), MAIN_INTERVAL_MS);
