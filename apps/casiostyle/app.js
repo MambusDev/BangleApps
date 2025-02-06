@@ -156,6 +156,7 @@ function enableNightMode() {
   casio.saveValue("styleBeforeNightmode", {bg: bgColor, fg: fgColor});
   setStyle(NIGHTMODE_STYLE);
   saveValue("style", NIGHTMODE_STYLE);
+  Bangle.setOptions({ powerSave: true });  // Enable power saving
 }
 
 function disableNightMode() {
@@ -170,6 +171,7 @@ function disableNightMode() {
 
   setStyle(styleBeforeNightmode);
   saveValue("style", styleBeforeNightmode);
+  Bangle.setOptions({ powerSave: false });  // Disable power saving
 }
 
 function toggleNightMode() {
