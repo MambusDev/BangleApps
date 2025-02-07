@@ -153,10 +153,21 @@ function enableNightMode() {
     wakeOnFaceUp: false
   });
 
+  Bangle.setOptions({ powerSave: true });  // Enable power saving
+}
+
+function saveCurrentStyle() {
   casio.saveValue("styleBeforeNightmode", {bg: bgColor, fg: fgColor});
   setStyle(NIGHTMODE_STYLE);
   saveValue("style", NIGHTMODE_STYLE);
-  Bangle.setOptions({ powerSave: true });  // Enable power saving
+}
+
+function restoreCurrentStyle() {
+  let data = casio.loadSavedValues();
+  let styleBeforeNightmode = ("styleBeforeNightmode" in data) ? data.styleBeforeNightmode : STYLES[0];
+
+  setStyle(styleBeforeNightmode);
+  saveValue("style", styleBeforeNightmode);
 }
 
 function disableNightMode() {
@@ -166,11 +177,6 @@ function disableNightMode() {
     wakeOnFaceUp: setting("wakeOnFaceUp")
   });
 
-  let data = casio.loadSavedValues();
-  let styleBeforeNightmode = ("styleBeforeNightmode" in data) ? data.styleBeforeNightmode : STYLES[0];
-
-  setStyle(styleBeforeNightmode);
-  saveValue("style", styleBeforeNightmode);
   Bangle.setOptions({ powerSave: false });  // Disable power saving
 }
 
@@ -180,8 +186,10 @@ function toggleNightMode() {
 
   if (systemWatchState.nightMode) {
     enableNightMode();
+    saveCurrentStyle();
   } else {
     disableNightMode();
+    restoreCurrentStyle();
   }
   renderAll(renderedWatchState(), showHighlighted);
 }
